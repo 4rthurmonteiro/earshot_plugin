@@ -12,3 +12,33 @@ coverage/
 .DS_Store
 .flutter-plugins
 .flutter-plugins-dependencies
+.pub/
+.vscode/
+pubspec_overrides.yaml
+
+# Android
+.gradle/
+local.properties
+gradlew
+gradlew.bat
+gradle-wrapper.jar
+.cxx/
+GeneratedPluginRegistrant.java
+
+# iOS / macOS
+Pods/
+Podfile.lock
+.symlinks/
+xcuserdata/
+DerivedData/
+.build/
+.swiftpm/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/Flutter/App.framework/
+**/Flutter/Flutter.framework/
+**/Flutter/Flutter.podspec
+GeneratedPluginRegistrant.h
+GeneratedPluginRegistrant.m
+GeneratedPluginRegistrant.swift
