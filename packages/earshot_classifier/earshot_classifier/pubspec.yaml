@@ -22,14 +22,21 @@ flutter:
       macos:
         default_package: earshot_classifier_darwin
 
+  assets:
+    # YAMNet float32 from MediaPipe (Apache-2.0). See THIRD_PARTY_NOTICES.md.
+    - assets/yamnet.tflite
+
 dependencies:
+  earshot_capture: ^0.0.1
   earshot_classifier_darwin: ^0.0.1
   earshot_classifier_platform_interface: ^0.0.1
   flutter:
     sdk: flutter
+  flutter_litert: ^3.9.4
   meta: ^1.15.0
 
 dev_dependencies:
+  earshot_capture_platform_interface: ^0.0.1
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.5

@@ -4,7 +4,8 @@
 import 'package:earshot_classifier/earshot_classifier.dart';
 
 const EarshotClassifier().detections().listen((detection) {
-  print('${detection.group}: ${detection.rawLabel}');
+  // sound is null when the label maps to no EarshotSound.
+  print('${detection.group}: ${detection.sound ?? detection.rawLabel}');
 });
 ```
 

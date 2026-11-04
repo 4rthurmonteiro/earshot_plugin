@@ -1,11 +1,21 @@
+import 'dart:async';
+
+import 'package:earshot_capture/earshot_capture.dart';
 import 'package:earshot_classifier/src/classifier_options.dart';
+import 'package:earshot_classifier/src/detection_smoother.dart';
+import 'package:earshot_classifier/src/earshot_classifier_yamnet.dart';
+import 'package:earshot_classifier/src/smoothing.dart';
+import 'package:earshot_classifier/src/yamnet/yamnet_classifier.dart';
 import 'package:earshot_classifier_platform_interface/earshot_classifier_platform_interface.dart';
+import 'package:flutter/foundation.dart';
 
 /// {@template earshot_classifier}
-/// Recognizes sounds from the device microphone, on-device.
+/// Recognizes sounds on-device.
 ///
+/// [options] pick the backend, the confidence threshold and the smoothing.
 /// Audio never leaves the device. earshot is informational and is not a
-/// certified detector.
+/// certified detector: never rely on it for safety, including smoke and
+/// carbon monoxide alarms.
 /// {@endtemplate}
 class EarshotClassifier {
   /// {@macro earshot_classifier}
@@ -14,14 +24,123 @@ class EarshotClassifier {
   /// How sounds are recognized.
   final ClassifierOptions options;
 
-  /// Starts classifying and returns the sounds it recognizes.
+  /// Starts classifying the microphone and returns the sounds it confirms.
+  ///
+  /// The backend comes from [ClassifierOptions.backend]:
+  ///
+  /// - [ClassifierBackend.yamnet] captures 16 kHz PCM with `earshot_capture`
+  ///   and runs YAMNet in Dart, on every platform.
+  /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on iOS and macOS,
+  ///   with its own microphone session. On other platforms the stream errors
+  ///   with an [UnsupportedError].
+  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
+  ///
+  /// Detections below [ClassifierOptions.minConfidence] are dropped, and the
+  /// rest are confirmed with [ClassifierOptions.smoothing] before they are
+  /// reported.
   ///
   /// Each call to `listen()` on the returned stream starts its own session,
   /// and cancelling the subscription stops it. The stream never throws
-  /// synchronously: failures are delivered as stream errors.
+  /// synchronously: failures, such as a denied microphone permission, are
+  /// delivered as stream errors.
+  Stream<SoundDetection> detections() => _confirmed(_openBackend);
+
+  /// Classifies [pcm] with YAMNet and returns the sounds it confirms.
   ///
-  /// Not implemented in 0.0.1: the stream errors with an
-  /// [UnimplementedError].
-  Stream<SoundDetection> detections() =>
-      EarshotClassifierPlatform.instance.detections();
+  /// Use this to share one capture stream with other consumers, such as a
+  /// level meter. PCM at 44.1 or 48 kHz is resampled to 16 kHz. Detections
+  /// are filtered and smoothed as in [detections].
+  ///
+  /// Only [ClassifierBackend.yamnet] can classify PCM, so
+  /// [ClassifierBackend.auto] uses it too, and [ClassifierBackend.apple]
+  /// makes the stream error with an [UnsupportedError].
+  ///
+  /// Each call to `listen()` on the returned stream listens to [pcm], so
+  /// [pcm] must be a broadcast stream to be listened to more than once.
+  /// Cancelling the subscription cancels the subscription to [pcm].
+  Stream<SoundDetection> classify(Stream<PcmChunk> pcm) => _confirmed(() async {
+    if (options.backend == ClassifierBackend.apple) {
+      throw UnsupportedError(
+        'The apple backend cannot classify PCM. Use yamnet or auto.',
+      );
+    }
+    return classifyWithYamnet(() => pcm, _config);
+  });
+
+  ClassifierConfig get _config =>
+      ClassifierConfig(minConfidence: options.minConfidence);
+
+  Future<Stream<SoundDetection>> _openBackend() async {
+    final platform = EarshotClassifierPlatform.instance;
+    switch (options.backend) {
+      case ClassifierBackend.yamnet:
+        return EarshotClassifierYamnet().detections(_config);
+      case ClassifierBackend.apple:
+        if (!_isApplePlatform) {
+          throw UnsupportedError(
+            'The apple backend is only available on iOS and macOS.',
+          );
+        }
+        return platform.detections(_config);
+      case ClassifierBackend.auto:
+        if (_isApplePlatform && await _isAvailable(platform)) {
+          return platform.detections(_config);
+        }
+        return EarshotClassifierYamnet().detections(_config);
+    }
+  }
+
+  static bool get _isApplePlatform =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
+  static Future<bool> _isAvailable(EarshotClassifierPlatform platform) async {
+    try {
+      return await platform.isAvailable();
+    } on Object {
+      // A platform that cannot tell, such as the 0.0.1 stub, is unavailable.
+      return false;
+    }
+  }
+
+  /// Opens a raw detection stream on each `listen()`, then drops detections
+  /// below the threshold and confirms the rest with [Smoothing].
+  Stream<SoundDetection> _confirmed(
+    Future<Stream<SoundDetection>> Function() open,
+  ) => Stream.multi((controller) {
+    final smoother = DetectionSmoother(options.smoothing);
+    StreamSubscription<SoundDetection>? subscription;
+    var cancelled = false;
+    controller.onCancel = () {
+      cancelled = true;
+      return subscription?.cancel();
+    };
+    unawaited(
+      open().then(
+        (raw) {
+          if (cancelled) return;
+          subscription = raw.listen(
+            (detection) {
+              if (detection.confidence < options.minConfidence) return;
+              final confirmed = smoother.add(detection);
+              if (confirmed != null) controller.addSync(confirmed);
+            },
+            onError: controller.addErrorSync,
+            onDone: controller.closeSync,
+          );
+          controller
+            ..onPause = subscription!.pause
+            ..onResume = subscription!.resume;
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (cancelled) return;
+          controller
+            ..addErrorSync(error, stackTrace)
+            ..closeSync();
+        },
+      ),
+    );
+  });
 }

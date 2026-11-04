@@ -1,0 +1,3 @@
+tags:
+  # Suites that must run on their own, outside very_good test optimization.
+  skip_very_good_optimization:
