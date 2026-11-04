@@ -34,12 +34,15 @@ melos:
 
     test:
       description: Run tests with 100% coverage in every package that has tests.
-      exec: very_good test --coverage --min-coverage 100 --exclude-coverage "**/*.g.dart" --test-randomize-ordering-seed random
+      exec:
+        # very_good shares a mason cache that races when packages run in parallel.
+        concurrency: 1
+        command: very_good test --coverage --min-coverage 100 --exclude-coverage "**/*.g.dart" --test-randomize-ordering-seed random
       packageFilters:
         dirExists: test
 
     pigeon:
       description: Regenerate Pigeon code in every package that owns pigeons/.
-      exec: dart run pigeon --input pigeons/messages.dart
+      exec: dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
       packageFilters:
         dirExists: pigeons
