@@ -46,7 +46,7 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 
 **Workspace**
 - [x] Melos 8 on Dart pub workspaces, with one lockfile (0.0.1)
-- [x] CI: analyze, format, 100% test coverage, generated-code check, example builds (0.0.1)
+- [x] CI: analyze, format, 100% test coverage, generated-code check, Android example build (0.0.1)
 - [x] Swift Package Manager and CocoaPods support for the Apple packages (0.0.1)
 
 **earshot_capture**

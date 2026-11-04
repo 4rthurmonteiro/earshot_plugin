@@ -33,6 +33,7 @@ dart run melos run pigeon         # regenerate Pigeon code; commit the result
 - Update the `CHANGELOG.md` of every package you change.
 - If your PR implements an item of the feature checklist in the root [`README.md`](README.md), tick it (`- [x]`) in the same PR.
 - A new architectural decision needs a new ADR in `docs/adr/`.
+- CI builds the example for Android only. If your PR touches Swift or the darwin packages, build the example locally with `flutter build ios --simulator --debug` and `flutter build macos --debug` from `examples/earshot_example`, and say so in the PR.
 
 ## Releasing
 
