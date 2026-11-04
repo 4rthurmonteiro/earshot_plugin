@@ -20,11 +20,11 @@
   "useGitignore": true,
   "ignorePaths": [
     "**/*.g.dart",
-    "pubspec.lock",
-    "packages/earshot_classifier/earshot_classifier_platform_interface/lib/src/vocabulary/apple_labels.dart",
-    "packages/earshot_classifier/earshot_classifier_platform_interface/lib/src/vocabulary/earshot_sound.dart",
-    "packages/earshot_classifier/earshot_classifier_platform_interface/lib/src/vocabulary/yamnet_labels.dart",
-    "tools/vocab/**"
+    "**/pubspec.lock",
+    "**/lib/src/vocabulary/apple_labels.dart",
+    "**/lib/src/vocabulary/earshot_sound.dart",
+    "**/lib/src/vocabulary/yamnet_labels.dart",
+    "**/tools/vocab/**"
   ],
   "words": [
     "behaviour",
@@ -41,14 +41,15 @@
     "MediaPipe",
     "mediapipe",
     "mocktail",
+    "Nyquist",
     "pana",
     "PCM",
     "pcm",
     "podspec",
     "podspecs",
     "polyphase",
-    "resampler",
     "Resampler",
+    "resampler",
     "resampling",
     "rthurmonteiro",
     "sinc",
@@ -59,6 +60,7 @@
     "tensorflow",
     "tflite",
     "UNPROCESSED",
+    "unsmoothed",
     "xcprivacy",
     "YAMNet",
     "yamnet"
