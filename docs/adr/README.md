@@ -16,6 +16,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0010](0010-privacy-and-liability.md) | Privacy and liability posture | Accepted |
 | [0011](0011-sound-vocabulary.md) | Sound vocabulary and classifier backends | Accepted, amended by 0014 |
 | [0012](0012-weighting-filter-design-and-level-reference.md) | Weighting filter design and level reference | Accepted |
+| [0013](0013-capture-session-sharing-and-interruptions.md) | Capture session sharing, errors and interruptions | Accepted |
 | [0014](0014-classifier-platform-interface-and-model-bundling.md) | Classifier platform interface, vocabulary data and model bundling | Accepted |
 
 ## Template

@@ -49,6 +49,35 @@ void main() {
     });
   });
 
+  group(CaptureException, () {
+    final code = CaptureErrorCode.values.first;
+
+    test('supports value equality', () {
+      final a = CaptureException(code, 'denied');
+      final b = CaptureException(code, 'denied');
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(CaptureException(code)));
+      expect(
+        a,
+        isNot(const CaptureException(CaptureErrorCode.unknown, 'denied')),
+      );
+      expect(a, isNot(Object()));
+    });
+
+    test('has a readable toString', () {
+      expect(
+        const CaptureException(CaptureErrorCode.audioUnavailable).toString(),
+        'CaptureException(audioUnavailable)',
+      );
+      expect(
+        const CaptureException(CaptureErrorCode.unknown, 'boom').toString(),
+        'CaptureException(unknown, boom)',
+      );
+    });
+  });
+
   group(PcmChunk, () {
     PcmChunk chunk({
       List<double> samples = const [0.1, -0.2, 0.3],

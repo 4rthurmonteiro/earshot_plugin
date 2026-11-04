@@ -1,4 +1,6 @@
 import 'package:earshot_capture_platform_interface/src/capture_config.dart';
+import 'package:earshot_capture_platform_interface/src/capture_exception.dart';
+import 'package:earshot_capture_platform_interface/src/capture_multiplexer.dart';
 import 'package:earshot_capture_platform_interface/src/capture_state.dart';
 import 'package:earshot_capture_platform_interface/src/microphone_permission_status.dart';
 import 'package:earshot_capture_platform_interface/src/not_implemented.dart';
@@ -46,11 +48,14 @@ abstract class EarshotCapturePlatform extends PlatformInterface {
 
   /// Starts capture with [config] and returns the PCM it produces.
   ///
-  /// Capture stops when the subscription is cancelled.
+  /// Each `listen()` gets its own subscription, and cancelling the last one
+  /// stops the native capture. Failures are delivered as [CaptureException]
+  /// stream errors, never thrown synchronously. Implementations can use
+  /// [CaptureMultiplexer] to share one native session.
   Stream<PcmChunk> pcm(CaptureConfig config) =>
       Stream.error(UnimplementedError(kCaptureNotImplementedMessage));
 
-  /// The state changes of the capture session.
+  /// The state changes of the capture session. Emits the current state first.
   Stream<CaptureState> stateChanges() =>
       Stream.error(UnimplementedError(kCaptureNotImplementedMessage));
 }

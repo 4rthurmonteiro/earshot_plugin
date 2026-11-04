@@ -13,6 +13,12 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 private object MessagesPigeonUtils {
 
   fun wrapResult(result: Any?): List<Any?> {
@@ -34,6 +40,150 @@ private object MessagesPigeonUtils {
       )
     }
   }
+  fun doubleEquals(a: Double, b: Double): Boolean {
+    // Normalize -0.0 to 0.0 and handle NaN equality.
+    return (if (a == 0.0) 0.0 else a) == (if (b == 0.0) 0.0 else b) || (a.isNaN() && b.isNaN())
+  }
+
+  fun floatEquals(a: Float, b: Float): Boolean {
+    // Normalize -0.0 to 0.0 and handle NaN equality.
+    return (if (a == 0.0f) 0.0f else a) == (if (b == 0.0f) 0.0f else b) || (a.isNaN() && b.isNaN())
+  }
+
+  fun doubleHash(d: Double): Int {
+    // Normalize -0.0 to 0.0 and handle NaN to ensure consistent hash codes.
+    val normalized = if (d == 0.0) 0.0 else d
+    val bits = java.lang.Double.doubleToLongBits(normalized)
+    return (bits xor (bits ushr 32)).toInt()
+  }
+
+  fun floatHash(f: Float): Int {
+    // Normalize -0.0 to 0.0 and handle NaN to ensure consistent hash codes.
+    val normalized = if (f == 0.0f) 0.0f else f
+    return java.lang.Float.floatToIntBits(normalized)
+  }
+
+  fun deepEquals(a: Any?, b: Any?): Boolean {
+    if (a === b) {
+      return true
+    }
+    if (a == null || b == null) {
+      return false
+    }
+    if (a is ByteArray && b is ByteArray) {
+      return a.contentEquals(b)
+    }
+    if (a is IntArray && b is IntArray) {
+      return a.contentEquals(b)
+    }
+    if (a is LongArray && b is LongArray) {
+      return a.contentEquals(b)
+    }
+    if (a is DoubleArray && b is DoubleArray) {
+      if (a.size != b.size) return false
+      for (i in a.indices) {
+        if (!doubleEquals(a[i], b[i])) return false
+      }
+      return true
+    }
+    if (a is FloatArray && b is FloatArray) {
+      if (a.size != b.size) return false
+      for (i in a.indices) {
+        if (!floatEquals(a[i], b[i])) return false
+      }
+      return true
+    }
+    if (a is Array<*> && b is Array<*>) {
+      if (a.size != b.size) return false
+      for (i in a.indices) {
+        if (!deepEquals(a[i], b[i])) return false
+      }
+      return true
+    }
+    if (a is List<*> && b is List<*>) {
+      if (a.size != b.size) return false
+      val iterA = a.iterator()
+      val iterB = b.iterator()
+      while (iterA.hasNext() && iterB.hasNext()) {
+        if (!deepEquals(iterA.next(), iterB.next())) return false
+      }
+      return true
+    }
+    if (a is Map<*, *> && b is Map<*, *>) {
+      if (a.size != b.size) return false
+      for (entry in a) {
+        val key = entry.key
+        var found = false
+        for (bEntry in b) {
+          if (deepEquals(key, bEntry.key)) {
+            if (deepEquals(entry.value, bEntry.value)) {
+              found = true
+              break
+            } else {
+              return false
+            }
+          }
+        }
+        if (!found) return false
+      }
+      return true
+    }
+    if (a is Double && b is Double) {
+      return doubleEquals(a, b)
+    }
+    if (a is Float && b is Float) {
+      return floatEquals(a, b)
+    }
+    return a == b
+  }
+
+  fun deepHash(value: Any?): Int {
+    return when (value) {
+      null -> 0
+      is ByteArray -> value.contentHashCode()
+      is IntArray -> value.contentHashCode()
+      is LongArray -> value.contentHashCode()
+      is DoubleArray -> {
+        var result = 1
+        for (item in value) {
+          result = 31 * result + doubleHash(item)
+        }
+        result
+      }
+      is FloatArray -> {
+        var result = 1
+        for (item in value) {
+          result = 31 * result + floatHash(item)
+        }
+        result
+      }
+      is Array<*> -> {
+        var result = 1
+        for (item in value) {
+          result = 31 * result + deepHash(item)
+        }
+        result
+      }
+      is List<*> -> {
+        var result = 1
+        for (item in value) {
+          result = 31 * result + deepHash(item)
+        }
+        result
+      }
+      is Map<*, *> -> {
+        var result = 0
+        for (entry in value) {
+          result += ((deepHash(entry.key) * 31) xor deepHash(entry.value))
+        }
+        result
+      }
+      is Double -> doubleHash(value)
+      is Float -> floatHash(value)
+      else -> value.hashCode()
+    }
+  }
+
 }
 
 /**
@@ -61,12 +211,176 @@ enum class PermissionStatusMessage(val raw: Int) {
     }
   }
 }
+
+/** The state of the native capture session. */
+enum class CaptureStateMessage(val raw: Int) {
+  IDLE(0),
+  CAPTURING(1),
+  INTERRUPTED(2);
+
+  companion object {
+    fun ofRaw(raw: Int): CaptureStateMessage? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * The configuration the host opens the microphone with.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class CaptureConfigMessage (
+  /** The rate PCM is delivered at, in hertz: 16000, 44100 or 48000. */
+  val sampleRateHz: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): CaptureConfigMessage {
+      val sampleRateHz = pigeonVar_list[0] as Long
+      return CaptureConfigMessage(sampleRateHz)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      sampleRateHz,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as CaptureConfigMessage
+    return MessagesPigeonUtils.deepEquals(this.sampleRateHz, other.sampleRateHz)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.sampleRateHz)
+    return result
+  }
+  override fun toString(): String {
+    return "CaptureConfigMessage(sampleRateHz=$sampleRateHz)"
+  }
+}
+
+/**
+ * A chunk of float32 mono PCM produced by the host.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PcmChunkMessage (
+  /** The mono float32 samples, little-endian, nominally in the range -1 to 1. */
+  val samples: ByteArray,
+  /** The time of the first sample since capture started, in microseconds. */
+  val timestampMicros: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PcmChunkMessage {
+      val samples = pigeonVar_list[0] as ByteArray
+      val timestampMicros = pigeonVar_list[1] as Long
+      return PcmChunkMessage(samples, timestampMicros)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      samples,
+      timestampMicros,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PcmChunkMessage
+    return MessagesPigeonUtils.deepEquals(this.samples, other.samples) && MessagesPigeonUtils.deepEquals(this.timestampMicros, other.timestampMicros)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.samples)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.timestampMicros)
+    return result
+  }
+  override fun toString(): String {
+    return "PcmChunkMessage(samples=${samples.contentToString()}, timestampMicros=$timestampMicros)"
+  }
+}
+
+/**
+ * A capture state change produced by the host.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class CaptureStateEventMessage (
+  /** The new state. */
+  val state: CaptureStateMessage
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): CaptureStateEventMessage {
+      val state = pigeonVar_list[0] as CaptureStateMessage
+      return CaptureStateEventMessage(state)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      state,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as CaptureStateEventMessage
+    return MessagesPigeonUtils.deepEquals(this.state, other.state)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.state)
+    return result
+  }
+  override fun toString(): String {
+    return "CaptureStateEventMessage(state=$state)"
+  }
+}
 private open class MessagesPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       129.toByte() -> {
         (readValue(buffer) as Long?)?.let {
           PermissionStatusMessage.ofRaw(it.toInt())
+        }
+      }
+      130.toByte() -> {
+        (readValue(buffer) as Long?)?.let {
+          CaptureStateMessage.ofRaw(it.toInt())
+        }
+      }
+      131.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          CaptureConfigMessage.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          PcmChunkMessage.fromList(it)
+        }
+      }
+      133.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          CaptureStateEventMessage.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -78,10 +392,29 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
+      is CaptureStateMessage -> {
+        stream.write(130)
+        writeValue(stream, value.raw.toLong())
+      }
+      is CaptureConfigMessage -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is PcmChunkMessage -> {
+        stream.write(132)
+        writeValue(stream, value.toList())
+      }
+      is CaptureStateEventMessage -> {
+        stream.write(133)
+        writeValue(stream, value.toList())
+      }
       else -> super.writeValue(stream, value)
     }
   }
 }
+
+val MessagesPigeonMethodCodec = StandardMethodCodec(MessagesPigeonCodec())
+
 
 /**
  * The calls Dart makes to the Android host.
@@ -91,6 +424,12 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
 interface EarshotCaptureHostApi {
   /** Reads the microphone permission status without prompting the user. */
   fun microphonePermissionStatus(): PermissionStatusMessage
+  /** Asks the user for microphone access if needed and returns the result. */
+  suspend fun requestMicrophonePermission(): PermissionStatusMessage
+  /** Opens the microphone with [config]. Chunks arrive on `pcmChunks`. */
+  fun startCapture(config: CaptureConfigMessage)
+  /** Closes the microphone. Does nothing if capture is not running. */
+  fun stopCapture()
 
   companion object {
     /** The codec used by EarshotCaptureHostApi. */
@@ -116,6 +455,185 @@ interface EarshotCaptureHostApi {
           channel.setMessageHandler(null)
         }
       }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.earshot_capture_android.EarshotCaptureHostApi.requestMicrophonePermission$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.requestMicrophonePermission())
+              } catch (exception: Throwable) {
+                MessagesPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.earshot_capture_android.EarshotCaptureHostApi.startCapture$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val configArg = args[0] as CaptureConfigMessage
+            val wrapped: List<Any?> = try {
+              api.startCapture(configArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              MessagesPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.earshot_capture_android.EarshotCaptureHostApi.stopCapture$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.stopCapture()
+              listOf(null)
+            } catch (exception: Throwable) {
+              MessagesPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
     }
   }
 }
+
+private class MessagesPigeonStreamHandler<T>(
+    val wrapper: MessagesPigeonEventChannelWrapper<T>
+) : EventChannel.StreamHandler {
+  var pigeonSink: PigeonEventSink<T>? = null
+
+  override fun onListen(p0: Any?, sink: EventChannel.EventSink) {
+    pigeonSink = PigeonEventSink<T>(sink)
+    wrapper.onListen(p0, pigeonSink!!)
+  }
+
+  override fun onCancel(p0: Any?) {
+    pigeonSink = null
+    wrapper.onCancel(p0)
+  }
+}
+
+interface MessagesPigeonEventChannelWrapper<T> {
+  fun onListen(p0: Any?, sink: PigeonEventSink<T>) {}
+
+  fun onCancel(p0: Any?) {}
+}
+
+class PigeonEventSink<T>(private val sink: EventChannel.EventSink) {
+  fun success(value: T) {
+    sink.success(value)
+  }
+
+  fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
+    sink.error(errorCode, errorMessage, errorDetails)
+  }
+
+  fun endOfStream() {
+    sink.endOfStream()
+  }
+}
+      
+/** The streams the Android host sends to Dart. */
+/** A typed channel for communicating with the Flutter application using asynchronous event streams. */
+class PcmChunksEventChannel(messenger: BinaryMessenger, instanceName: String = "") {
+  private val channel: EventChannel
+
+  init {
+    var channelName = "dev.flutter.pigeon.earshot_capture_android.EarshotCaptureEventApi.pcmChunks"
+    if (instanceName.isNotEmpty()) {
+      channelName += ".$instanceName"
+    }
+    channel = EventChannel(messenger, channelName, MessagesPigeonMethodCodec)
+  }
+
+  /**
+   * Sets the stream handler for this channel, replacing any previous handler.
+   *
+   * Pass `null` to remove the event channel registration.
+   */
+  fun setStreamHandler(streamHandler: PcmChunksStreamHandler?) {
+    val internalHandler = streamHandler?.let { MessagesPigeonStreamHandler<PcmChunkMessage>(it) }
+    channel.setStreamHandler(internalHandler)
+  }
+}
+
+abstract class PcmChunksStreamHandler : MessagesPigeonEventChannelWrapper<PcmChunkMessage> {
+  companion object {
+    /**
+     * Creates and returns a new event channel that calls the provided stream handler.
+     *
+     * The returned channel can be stored to allow changing or removing the stream handler.
+     * If the handler will not be changed for the lifetime of the engine associated with the messenger,
+     * the return value can be ignored.
+     */
+    fun register(messenger: BinaryMessenger, streamHandler: PcmChunksStreamHandler, instanceName: String = ""): PcmChunksEventChannel {
+      val channel = PcmChunksEventChannel(messenger, instanceName)
+      channel.setStreamHandler(streamHandler)
+      return channel
+    }
+  }
+
+  // Implement methods from MessagesPigeonEventChannelWrapper
+  override fun onListen(p0: Any?, sink: PigeonEventSink<PcmChunkMessage>) {}
+
+  override fun onCancel(p0: Any?) {}
+}
+      
+/** A typed channel for communicating with the Flutter application using asynchronous event streams. */
+class CaptureStatesEventChannel(messenger: BinaryMessenger, instanceName: String = "") {
+  private val channel: EventChannel
+
+  init {
+    var channelName = "dev.flutter.pigeon.earshot_capture_android.EarshotCaptureEventApi.captureStates"
+    if (instanceName.isNotEmpty()) {
+      channelName += ".$instanceName"
+    }
+    channel = EventChannel(messenger, channelName, MessagesPigeonMethodCodec)
+  }
+
+  /**
+   * Sets the stream handler for this channel, replacing any previous handler.
+   *
+   * Pass `null` to remove the event channel registration.
+   */
+  fun setStreamHandler(streamHandler: CaptureStatesStreamHandler?) {
+    val internalHandler = streamHandler?.let { MessagesPigeonStreamHandler<CaptureStateEventMessage>(it) }
+    channel.setStreamHandler(internalHandler)
+  }
+}
+
+abstract class CaptureStatesStreamHandler : MessagesPigeonEventChannelWrapper<CaptureStateEventMessage> {
+  companion object {
+    /**
+     * Creates and returns a new event channel that calls the provided stream handler.
+     *
+     * The returned channel can be stored to allow changing or removing the stream handler.
+     * If the handler will not be changed for the lifetime of the engine associated with the messenger,
+     * the return value can be ignored.
+     */
+    fun register(messenger: BinaryMessenger, streamHandler: CaptureStatesStreamHandler, instanceName: String = ""): CaptureStatesEventChannel {
+      val channel = CaptureStatesEventChannel(messenger, instanceName)
+      channel.setStreamHandler(streamHandler)
+      return channel
+    }
+  }
+
+  // Implement methods from MessagesPigeonEventChannelWrapper
+  override fun onListen(p0: Any?, sink: PigeonEventSink<CaptureStateEventMessage>) {}
+
+  override fun onCancel(p0: Any?) {}
+}
+      

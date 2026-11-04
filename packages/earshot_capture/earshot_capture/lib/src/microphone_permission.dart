@@ -21,7 +21,8 @@ class MicrophonePermission {
   /// Asks the user for microphone access if they have not answered yet, and
   /// returns the resulting status.
   ///
-  /// Not implemented in 0.0.1: completes with an [UnimplementedError].
+  /// If the user already answered, this returns their answer without
+  /// prompting again. On Android this needs a foreground `Activity`.
   Future<MicrophonePermissionStatus> request() =>
       EarshotCapturePlatform.instance.requestMicrophonePermission();
 }

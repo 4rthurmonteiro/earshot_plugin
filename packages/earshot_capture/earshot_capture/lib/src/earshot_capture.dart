@@ -9,21 +9,31 @@ class EarshotCapture {
   /// {@macro earshot_capture}
   const new();
 
-  /// Starts capture with [config] and returns the PCM it produces.
+  /// Starts capture with [config] and returns the float32 mono PCM it
+  /// produces.
   ///
-  /// Each call to `listen()` on the returned stream starts its own capture
-  /// session, and cancelling the subscription stops it. The stream never
-  /// throws synchronously: failures are delivered as stream errors.
+  /// Each call to `listen()` on the returned stream gets its own
+  /// subscription. Subscriptions share one microphone session, which stops
+  /// when the last one is cancelled. Concurrent subscriptions must use the
+  /// same [CaptureConfig.sampleRate]; otherwise the later one fails with
+  /// [CaptureErrorCode.sampleRateConflict].
   ///
-  /// Not implemented in 0.0.1: the stream errors with an
-  /// [UnimplementedError].
+  /// The microphone is opened without voice processing (iOS `.measurement`
+  /// mode, Android `UNPROCESSED` when the device supports it). When the
+  /// system interrupts capture, for example during a phone call, chunks stop
+  /// and [stateChanges] reports [CaptureState.interrupted]; capture resumes
+  /// on its own afterwards.
+  ///
+  /// The stream never throws synchronously: failures are delivered as
+  /// [CaptureException] stream errors, after which the stream closes. Ask for
+  /// the permission with `MicrophonePermission.request()` first, or the
+  /// stream fails with [CaptureErrorCode.permissionDenied].
   Stream<PcmChunk> pcm({CaptureConfig config = const CaptureConfig()}) =>
       EarshotCapturePlatform.instance.pcm(config);
 
   /// The state changes of the capture session, such as interruptions.
   ///
-  /// Not implemented in 0.0.1: the stream errors with an
-  /// [UnimplementedError].
+  /// Emits the current state first. Listening does not start capture.
   Stream<CaptureState> stateChanges() =>
       EarshotCapturePlatform.instance.stateChanges();
 }
