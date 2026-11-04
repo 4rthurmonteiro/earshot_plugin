@@ -15,6 +15,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0009](0009-api-preview-0-0-1.md) | 0.0.1 is an API preview, not a name placeholder | Accepted |
 | [0010](0010-privacy-and-liability.md) | Privacy and liability posture | Accepted |
 | [0011](0011-sound-vocabulary.md) | Sound vocabulary and classifier backends | Accepted |
+| [0014](0014-classifier-platform-interface-and-model-bundling.md) | Classifier platform interface, vocabulary data and model bundling | Accepted |
 
 ## Template
 
