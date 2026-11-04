@@ -67,6 +67,115 @@ enum MessagesPigeonInternal {
 
     return innerValue is NSNull
   }
+  static func doubleEquals(_ lhs: Double, _ rhs: Double) -> Bool {
+    return (lhs.isNaN && rhs.isNaN) || lhs == rhs
+  }
+
+  static func doubleHash(_ value: Double, _ hasher: inout Hasher) {
+    if value.isNaN {
+      hasher.combine(0x7FF8000000000000)
+    } else {
+      // Normalize -0.0 to 0.0
+      hasher.combine(value == 0 ? 0 : value)
+    }
+  }
+
+  static func deepEquals(_ lhs: Any?, _ rhs: Any?) -> Bool {
+    let cleanLhs = nilOrValue(lhs) as Any?
+    let cleanRhs = nilOrValue(rhs) as Any?
+    switch (cleanLhs, cleanRhs) {
+    case (nil, nil):
+      return true
+
+    case (nil, _), (_, nil):
+      return false
+
+    case (let lhs as AnyObject, let rhs as AnyObject) where lhs === rhs:
+      return true
+
+    case is (Void, Void):
+      return true
+
+    case (let lhsArray, let rhsArray) as ([Double], [Double]):
+      guard lhsArray.count == rhsArray.count else { return false }
+      for (index, element) in lhsArray.enumerated() {
+        if !doubleEquals(element, rhsArray[index]) {
+          return false
+        }
+      }
+      return true
+
+    case (let lhsArray, let rhsArray) as ([Any?], [Any?]):
+      guard lhsArray.count == rhsArray.count else { return false }
+      for (index, element) in lhsArray.enumerated() {
+        if !deepEquals(element, rhsArray[index]) {
+          return false
+        }
+      }
+      return true
+
+    case (let lhsDictionary, let rhsDictionary) as ([AnyHashable: Any?], [AnyHashable: Any?]):
+      guard lhsDictionary.count == rhsDictionary.count else { return false }
+      for (lhsKey, lhsValue) in lhsDictionary {
+        var found = false
+        for (rhsKey, rhsValue) in rhsDictionary {
+          if deepEquals(lhsKey, rhsKey) {
+            if deepEquals(lhsValue, rhsValue) {
+              found = true
+              break
+            } else {
+              return false
+            }
+          }
+        }
+        if !found { return false }
+      }
+      return true
+
+    case (let lhs as Double, let rhs as Double):
+      return doubleEquals(lhs, rhs)
+
+    case (let lhsHashable, let rhsHashable) as (AnyHashable, AnyHashable):
+      return lhsHashable == rhsHashable
+
+    default:
+      return false
+    }
+  }
+
+  static func deepHash(value: Any?, hasher: inout Hasher) {
+    let cleanValue = nilOrValue(value) as Any?
+    if let cleanValue = cleanValue {
+      if let doubleValue = cleanValue as? Double {
+        doubleHash(doubleValue, &hasher)
+      } else if let valueList = cleanValue as? [Any?] {
+        for item in valueList {
+          deepHash(value: item, hasher: &hasher)
+        }
+      } else if let valueList = cleanValue as? [Double] {
+        for item in valueList {
+          doubleHash(item, &hasher)
+        }
+      } else if let valueDict = cleanValue as? [AnyHashable: Any?] {
+        var result = 0
+        for (key, value) in valueDict {
+          var entryKeyHasher = Hasher()
+          deepHash(value: key, hasher: &entryKeyHasher)
+          var entryValueHasher = Hasher()
+          deepHash(value: value, hasher: &entryValueHasher)
+          result = result &+ ((entryKeyHasher.finalize() &* 31) ^ entryValueHasher.finalize())
+        }
+        hasher.combine(result)
+      } else if let hashableValue = cleanValue as? AnyHashable {
+        hasher.combine(hashableValue)
+      } else {
+        hasher.combine(String(describing: cleanValue))
+      }
+    } else {
+      hasher.combine(0)
+    }
+  }
+
 }
 
 private func nilOrValue<T>(_ value: Any?) -> T? {
@@ -83,6 +192,133 @@ enum PermissionStatusMessage: Int, CaseIterable {
   case restricted = 3
 }
 
+/// The state of the native capture session.
+enum CaptureStateMessage: Int, CaseIterable {
+  case idle = 0
+  case capturing = 1
+  case interrupted = 2
+}
+
+/// The configuration the host opens the microphone with.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct CaptureConfigMessage: Hashable, CustomStringConvertible {
+  /// The rate PCM is delivered at, in hertz: 16000, 44100 or 48000.
+  var sampleRateHz: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> CaptureConfigMessage? {
+    let sampleRateHz = pigeonVar_list[0] as! Int64
+
+    return CaptureConfigMessage(
+      sampleRateHz: sampleRateHz
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      sampleRateHz
+    ]
+  }
+  static func == (lhs: CaptureConfigMessage, rhs: CaptureConfigMessage) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.sampleRateHz, rhs.sampleRateHz)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("CaptureConfigMessage")
+    MessagesPigeonInternal.deepHash(value: sampleRateHz, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "CaptureConfigMessage(sampleRateHz: \(String(describing: sampleRateHz)))"
+  }
+}
+
+/// A chunk of float32 mono PCM produced by the host.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PcmChunkMessage: Hashable, CustomStringConvertible {
+  /// The mono float32 samples, little-endian, nominally in the range -1 to 1.
+  var samples: FlutterStandardTypedData
+  /// The time of the first sample since capture started, in microseconds.
+  var timestampMicros: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PcmChunkMessage? {
+    let samples = pigeonVar_list[0] as! FlutterStandardTypedData
+    let timestampMicros = pigeonVar_list[1] as! Int64
+
+    return PcmChunkMessage(
+      samples: samples,
+      timestampMicros: timestampMicros
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      samples,
+      timestampMicros,
+    ]
+  }
+  static func == (lhs: PcmChunkMessage, rhs: PcmChunkMessage) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.samples, rhs.samples) && MessagesPigeonInternal.deepEquals(lhs.timestampMicros, rhs.timestampMicros)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PcmChunkMessage")
+    MessagesPigeonInternal.deepHash(value: samples, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: timestampMicros, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PcmChunkMessage(samples: \(String(describing: samples)), timestampMicros: \(String(describing: timestampMicros)))"
+  }
+}
+
+/// A capture state change produced by the host.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct CaptureStateEventMessage: Hashable, CustomStringConvertible {
+  /// The new state.
+  var state: CaptureStateMessage
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> CaptureStateEventMessage? {
+    let state = pigeonVar_list[0] as! CaptureStateMessage
+
+    return CaptureStateEventMessage(
+      state: state
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      state
+    ]
+  }
+  static func == (lhs: CaptureStateEventMessage, rhs: CaptureStateEventMessage) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.state, rhs.state)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("CaptureStateEventMessage")
+    MessagesPigeonInternal.deepHash(value: state, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "CaptureStateEventMessage(state: \(String(describing: state)))"
+  }
+}
+
 private class MessagesPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -92,6 +328,18 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
         return PermissionStatusMessage(rawValue: enumResultAsInt)
       }
       return nil
+    case 130:
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return CaptureStateMessage(rawValue: enumResultAsInt)
+      }
+      return nil
+    case 131:
+      return CaptureConfigMessage.fromList(self.readValue() as! [Any?])
+    case 132:
+      return PcmChunkMessage.fromList(self.readValue() as! [Any?])
+    case 133:
+      return CaptureStateEventMessage.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -103,6 +351,18 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? PermissionStatusMessage {
       super.writeByte(129)
       super.writeValue(value.rawValue)
+    } else if let value = value as? CaptureStateMessage {
+      super.writeByte(130)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? CaptureConfigMessage {
+      super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? PcmChunkMessage {
+      super.writeByte(132)
+      super.writeValue(value.toList())
+    } else if let value = value as? CaptureStateEventMessage {
+      super.writeByte(133)
+      super.writeValue(value.toList())
     } else {
       super.writeValue(value)
     }
@@ -123,12 +383,21 @@ class MessagesPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
   static let shared = MessagesPigeonCodec(readerWriter: MessagesPigeonCodecReaderWriter())
 }
 
+var messagesPigeonMethodCodec = FlutterStandardMethodCodec(readerWriter: MessagesPigeonCodecReaderWriter());
+
+
 /// The calls Dart makes to the iOS and macOS host.
 ///
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EarshotCaptureHostApi {
   /// Reads the microphone permission status without prompting the user.
   func microphonePermissionStatus() throws -> PermissionStatusMessage
+  /// Asks the user for microphone access if needed and returns the result.
+  func requestMicrophonePermission() async throws -> PermissionStatusMessage
+  /// Opens the microphone with [config]. Chunks arrive on `pcmChunks`.
+  func startCapture(config: CaptureConfigMessage) throws
+  /// Closes the microphone. Does nothing if capture is not running.
+  func stopCapture() throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -151,5 +420,178 @@ class EarshotCaptureHostApiSetup {
     } else {
       microphonePermissionStatusChannel.setMessageHandler(nil)
     }
+    /// Asks the user for microphone access if needed and returns the result.
+    let requestMicrophonePermissionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_capture_darwin.EarshotCaptureHostApi.requestMicrophonePermission\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      requestMicrophonePermissionChannel.setMessageHandler { _, reply in
+        Task { @MainActor in
+          do {
+            let result = try await api.requestMicrophonePermission()
+            reply(wrapResult(result))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      requestMicrophonePermissionChannel.setMessageHandler(nil)
+    }
+    /// Opens the microphone with [config]. Chunks arrive on `pcmChunks`.
+    let startCaptureChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_capture_darwin.EarshotCaptureHostApi.startCapture\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      startCaptureChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let configArg = args[0] as! CaptureConfigMessage
+        do {
+          try api.startCapture(config: configArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      startCaptureChannel.setMessageHandler(nil)
+    }
+    /// Closes the microphone. Does nothing if capture is not running.
+    let stopCaptureChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_capture_darwin.EarshotCaptureHostApi.stopCapture\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      stopCaptureChannel.setMessageHandler { _, reply in
+        do {
+          try api.stopCapture()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      stopCaptureChannel.setMessageHandler(nil)
+    }
   }
 }
+
+private class PigeonStreamHandler<ReturnType>: NSObject, FlutterStreamHandler {
+  private let wrapper: PigeonEventChannelWrapper<ReturnType>
+  private var pigeonSink: PigeonEventSink<ReturnType>? = nil
+
+  init(wrapper: PigeonEventChannelWrapper<ReturnType>) {
+    self.wrapper = wrapper
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    pigeonSink = PigeonEventSink<ReturnType>(events)
+    wrapper.onListen(withArguments: arguments, sink: pigeonSink!)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    pigeonSink = nil
+    wrapper.onCancel(withArguments: arguments)
+    return nil
+  }
+}
+
+class PigeonEventChannelWrapper<ReturnType> {
+  func onListen(withArguments arguments: Any?, sink: PigeonEventSink<ReturnType>) {}
+  func onCancel(withArguments arguments: Any?) {}
+}
+
+class PigeonEventSink<ReturnType> {
+  private let sink: FlutterEventSink
+
+  init(_ sink: @escaping FlutterEventSink) {
+    self.sink = sink
+  }
+
+  func success(_ value: ReturnType) {
+    sink(value)
+  }
+
+  func error(code: String, message: String?, details: Any?) {
+    sink(FlutterError(code: code, message: message, details: details))
+  }
+
+  func endOfStream() {
+    sink(FlutterEndOfEventStream)
+  }
+
+}
+
+/// The streams the iOS and macOS host sends to Dart.
+/// A typed channel for communicating with the Flutter application using asynchronous event streams.
+class PcmChunksEventChannel {
+  private let channel: FlutterEventChannel
+
+  init(messenger: FlutterBinaryMessenger, instanceName: String = "") {
+    var channelName = "dev.flutter.pigeon.earshot_capture_darwin.EarshotCaptureEventApi.pcmChunks"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+  }
+
+  /// Sets the stream handler for this channel, replacing any previous handler.
+  /// 
+  /// Pass `nil` to remove the event channel registration.
+  func setStreamHandler(_ streamHandler: PcmChunksStreamHandler?) {
+    let internalHandler = streamHandler.map({ PigeonStreamHandler<PcmChunkMessage>(wrapper: $0) })
+    channel.setStreamHandler(internalHandler)
+  }
+}
+
+class PcmChunksStreamHandler: PigeonEventChannelWrapper<PcmChunkMessage> {
+  /// Creates and returns a new event channel that calls the provided stream handler.
+  /// 
+  /// The returned channel can be stored to allow changing or removing the stream handler.
+  /// If the handler will not be changed for the lifetime of the engine associated with the messenger,
+  /// the return value can be ignored.
+  @discardableResult static func register(
+    with messenger: FlutterBinaryMessenger,
+    instanceName: String = "",
+    streamHandler: PcmChunksStreamHandler
+  ) -> PcmChunksEventChannel {
+    let channel = PcmChunksEventChannel(messenger: messenger, instanceName: instanceName)
+    channel.setStreamHandler(streamHandler)
+    return channel
+  }
+}
+      
+/// A typed channel for communicating with the Flutter application using asynchronous event streams.
+class CaptureStatesEventChannel {
+  private let channel: FlutterEventChannel
+
+  init(messenger: FlutterBinaryMessenger, instanceName: String = "") {
+    var channelName = "dev.flutter.pigeon.earshot_capture_darwin.EarshotCaptureEventApi.captureStates"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+  }
+
+  /// Sets the stream handler for this channel, replacing any previous handler.
+  /// 
+  /// Pass `nil` to remove the event channel registration.
+  func setStreamHandler(_ streamHandler: CaptureStatesStreamHandler?) {
+    let internalHandler = streamHandler.map({ PigeonStreamHandler<CaptureStateEventMessage>(wrapper: $0) })
+    channel.setStreamHandler(internalHandler)
+  }
+}
+
+class CaptureStatesStreamHandler: PigeonEventChannelWrapper<CaptureStateEventMessage> {
+  /// Creates and returns a new event channel that calls the provided stream handler.
+  /// 
+  /// The returned channel can be stored to allow changing or removing the stream handler.
+  /// If the handler will not be changed for the lifetime of the engine associated with the messenger,
+  /// the return value can be ignored.
+  @discardableResult static func register(
+    with messenger: FlutterBinaryMessenger,
+    instanceName: String = "",
+    streamHandler: CaptureStatesStreamHandler
+  ) -> CaptureStatesEventChannel {
+    let channel = CaptureStatesEventChannel(messenger: messenger, instanceName: instanceName)
+    channel.setStreamHandler(streamHandler)
+    return channel
+  }
+}
+      

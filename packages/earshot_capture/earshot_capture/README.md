@@ -17,3 +17,26 @@ Your app declares microphone access, not this package:
 
 - **iOS and macOS:** add `NSMicrophoneUsageDescription` to `Info.plist`. On macOS, also add the `com.apple.security.device.audio-input` entitlement.
 - **Android:** `RECORD_AUDIO` is merged into your app's manifest by `earshot_capture_android`. Your app still asks the user at runtime.
+
+## Usage
+
+```dart
+import 'package:earshot_capture/earshot_capture.dart';
+
+final status = await const MicrophonePermission().request();
+if (status != MicrophonePermissionStatus.granted) return;
+
+final subscription = const EarshotCapture()
+    .pcm(config: const CaptureConfig(sampleRate: SampleRate.hz48000))
+    .listen(
+      (chunk) => debugPrint('${chunk.samples.length} samples'),
+      onError: (Object error) => debugPrint('$error'), // a CaptureException
+    );
+
+// Cancelling the last subscription closes the microphone.
+await subscription.cancel();
+```
+
+- Concurrent subscriptions share one microphone session and must use the same sample rate.
+- `stateChanges()` reports `interrupted` during phone calls, Siri or input device changes. Capture resumes on its own.
+- The input is unprocessed where the platform allows it: the iOS `.measurement` mode, and Android's `UNPROCESSED` source with a `VOICE_RECOGNITION` fallback.

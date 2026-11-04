@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:earshot_example/capture_demo.dart';
 import 'package:earshot_plugin/earshot_plugin.dart';
 import 'package:flutter/material.dart';
 
@@ -86,6 +87,8 @@ class _EarshotPageState extends State<EarshotPage> {
           FilledButton(onPressed: _start, child: const Text('Start')),
           const SizedBox(height: 16),
           Text(_status, key: const Key('status')),
+          const SizedBox(height: 24),
+          CaptureDemo(microphonePermission: widget.microphonePermission),
         ],
       ),
     );

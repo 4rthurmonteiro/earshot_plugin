@@ -7,6 +7,8 @@ library;
 import 'package:earshot_capture_platform_interface/src/earshot_capture_platform.dart';
 
 export 'src/capture_config.dart';
+export 'src/capture_exception.dart';
+export 'src/capture_multiplexer.dart';
 export 'src/capture_state.dart';
 export 'src/earshot_capture_platform.dart';
 export 'src/microphone_permission_status.dart';

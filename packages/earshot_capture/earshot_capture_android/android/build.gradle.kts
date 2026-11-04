@@ -46,6 +46,11 @@ android {
     }
 }
 
+dependencies {
+    // The Pigeon-generated host API runs @async methods as coroutines.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

@@ -55,11 +55,11 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 ### 0.1.0: capture, level and classification
 
 **earshot_capture**
-- [ ] Microphone permission request
-- [ ] PCM float32 mono stream at 16 / 44.1 / 48 kHz (Android, iOS, macOS)
-- [ ] Capture state changes
-- [ ] Interruption handling (calls, Siri, audio focus) with auto-resume
-- [ ] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback)
+- [x] Microphone permission request
+- [x] PCM float32 mono stream at 16 / 44.1 / 48 kHz (Android, iOS, macOS)
+- [x] Capture state changes
+- [ ] Interruption handling (calls, Siri, Android input silencing) with auto-resume, without taking audio focus
+- [x] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback)
 
 **earshot_level**
 - [x] A and Z weighting (IEC 61672, ±0.5 dB at 10 frequencies)
