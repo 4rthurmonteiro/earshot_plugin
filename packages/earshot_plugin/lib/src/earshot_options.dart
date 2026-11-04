@@ -16,7 +16,13 @@ class EarshotOptions {
     this.classifier = const ClassifierOptions(),
   });
 
-  /// How the microphone is captured.
+  /// How the microphone is captured, for the level meter and for YAMNet.
+  ///
+  /// Defaults to 16 kHz, the rate YAMNet runs at, so classification needs
+  /// no resampling and joins any other 16 kHz capture in the app. The level
+  /// meter works at every rate, but at 16 kHz it cannot measure anything
+  /// above 8 kHz. Pick [SampleRate.hz48000] for a full-band level: YAMNet
+  /// then resamples to 16 kHz in Dart, at some CPU cost.
   final CaptureConfig capture;
 
   /// How the sound level is measured, or `null` to skip level metering.

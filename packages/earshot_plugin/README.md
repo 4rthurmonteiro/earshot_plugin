@@ -5,11 +5,65 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
 > [!WARNING]
-> **Pre-release (0.0.1, API preview).** The public types are published for review and may still change in 0.x. Most calls are not implemented yet and complete with an `UnimplementedError`. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
+> **Pre-release (0.x).** The public API may still change in 0.x. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
 
 On-device ambient listening for Flutter: how loud it is, in dB(A), and what is sounding, in one stream. This is the umbrella package for `earshot_capture`, `earshot_level` and `earshot_classifier`.
 
 Part of [earshot](https://github.com/4rthurmonteiro/earshot_plugin): on-device ambient listening with no network access, where no audio leaves the device.
+
+## Usage
+
+```dart
+import 'package:earshot_plugin/earshot_plugin.dart';
+
+// Ask for the microphone first, or the stream fails with permissionDenied.
+await const MicrophonePermission().request();
+
+final subscription = const Earshot()
+    .listen(
+      options: const EarshotOptions(
+        level: LevelOptions(weighting: Weighting.a),
+        classifier: ClassifierOptions(minConfidence: 0.5),
+      ),
+    )
+    .listen(
+      (event) {
+        // One event per level reading, with the sounds confirmed since the
+        // previous event. sound is null when a label maps to no EarshotSound.
+        print('${event.level?.db} dB(A)');
+        for (final detection in event.detections) {
+          print('${detection.group} ${detection.sound} ${detection.rawLabel}');
+        }
+      },
+      onError: (Object error) {
+        if (error is EarshotException) print(error.code);
+      },
+    );
+
+// Cancelling stops the microphone, the level meter and the classifier.
+await subscription.cancel();
+```
+
+Set `level` or `classifier` to `null` to turn one off. With level metering off, each confirmed sound is an event of its own.
+
+## How it listens
+
+- **One microphone session.** One capture subscription feeds the level meter and, with the YAMNet backend, the classifier. Capture runs at `EarshotOptions.capture`, 16 kHz by default: the rate YAMNet runs at, so classification needs no resampling. The level meter works at every rate, but at 16 kHz it cannot measure above 8 kHz. Choose `SampleRate.hz48000` for a full-band level; YAMNet then resamples to 16 kHz.
+- **Backends.** `yamnet`, and `auto` on Android, classify the shared capture stream. `apple`, and `auto` on iOS and macOS, go through `EarshotClassifier.detections()`, which picks the backend. In 0.1.0 Apple SoundAnalysis runs its own microphone session next to capture; it moves to the shared capture tap in 0.2.0.
+- **Subscriptions.** Each `listen()` starts its own session, and cancelling it stops everything it started. Pausing pauses capture and the classifier, and buffers audio in memory, so cancel rather than pause for long breaks.
+
+## Errors
+
+Failures arrive as one `EarshotException` stream error, after which the stream closes. `cause` keeps the original error.
+
+| `EarshotErrorCode` | When |
+| --- | --- |
+| `permissionDenied` | The user denied microphone access, or has not granted it yet. |
+| `unsupported` | The platform or backend is not supported, for example `apple` on Android. |
+| `audioUnavailable` | The microphone could not be opened or recovered. |
+| `sampleRateConflict` | Another consumer in the app captures at a different sample rate. |
+| `modelUnavailable` | The classifier could not load its model, or failed while classifying. |
+| `unknown` | Anything else. |
 
 ## Microphone setup
 

@@ -76,8 +76,8 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 - [x] Confidence threshold and smoothing (N hits within T seconds)
 
 **earshot_plugin**
-- [ ] `Earshot.listen` combining level and classification
-- [ ] `EarshotException` error codes on stream errors
+- [x] `Earshot.listen` combining level and classification
+- [x] `EarshotException` error codes on stream errors
 
 ### 0.2.0: consolidation
 
