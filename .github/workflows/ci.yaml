@@ -1,0 +1,84 @@
+name: ci
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  FLUTTER_VERSION: 3.47.x
+
+jobs:
+  analyze-test:
+    name: Analyze, format and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart pub global activate very_good_cli
+      - run: dart run melos run analyze --no-select
+      - run: dart run melos run format:check
+      - run: dart run melos run test --no-select
+
+  generated-code:
+    name: Generated code is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart run melos run pigeon --no-select
+      - name: Fail if Pigeon output differs from the committed files
+        run: git diff --exit-code
+
+  build-example-android:
+    name: Build example (Android)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/earshot_example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug
+
+  build-example-apple:
+    name: Build example (iOS and macOS)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/earshot_example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter config --enable-swift-package-manager
+      - run: flutter pub get
+      - run: flutter build ios --simulator --debug
+      - run: flutter build macos --debug
