@@ -11,9 +11,21 @@ The iOS and macOS implementation of [`earshot_classifier`](https://pub.dev/packa
 
 Part of [earshot](https://github.com/4rthurmonteiro/earshot_plugin): on-device ambient listening with no network access, where no audio leaves the device.
 
+## How it works
+
+- Each `listen()` on `detections()` starts its own session, with its own `SNAudioStreamAnalyzer` and `SNClassifySoundRequest` (classifier version 1). Sessions that run at the same time share one `AVAudioEngine` input tap, and the microphone is released when the last one is cancelled.
+- Every label of an analysis window (about one second, overlapping by half) at or above the minimum confidence is reported. Labels are mapped to `EarshotSound` and `SoundGroup` in Dart, with `SoundVocabulary`.
+- `isAvailable()` never prompts, and neither does classification: request the microphone permission first, for example with `EarshotCapture.requestMicrophonePermission()`. Without it, the stream fails with `CaptureException(CaptureErrorCode.permissionDenied)`.
+- On iOS the audio session uses the `.record` category and the `.measurement` mode. Interruptions (calls, Siri, route and device changes) pause the detections, which resume on their own afterwards.
+- No audio is written to disk or leaves the device.
+
 ## Minimum OS versions
 
 Sound classification on Apple platforms uses SoundAnalysis, so apps that depend on this package need iOS 15 or macOS 12 or later.
+
+## Microphone setup
+
+Your app declares microphone access, not this package: add `NSMicrophoneUsageDescription` to `Info.plist`, and on macOS also add the `com.apple.security.device.audio-input` entitlement.
 
 ## Disclaimer
 
