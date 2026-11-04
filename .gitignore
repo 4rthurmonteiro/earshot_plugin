@@ -1,0 +1,14 @@
+# Local working docs (brainstorms and implementation plans) — not published.
+# Durable decisions live in docs/adr/, conventions in AGENTS.md.
+docs/brainstorm/
+docs/plan/
+
+# Dart / Flutter
+.dart_tool/
+build/
+coverage/
+*.iml
+.idea/
+.DS_Store
+.flutter-plugins
+.flutter-plugins-dependencies
