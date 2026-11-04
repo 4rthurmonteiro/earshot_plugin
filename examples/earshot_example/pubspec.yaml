@@ -1,0 +1,26 @@
+name: earshot_example
+description: Demonstrates the earshot packages on Android, iOS and macOS.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+
+resolution: workspace
+
+dependencies:
+  earshot_plugin: ^0.0.1
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  earshot_capture_platform_interface: ^0.0.1
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.5
+  plugin_platform_interface: ^2.1.8
+  very_good_analysis: ^11.0.0
+
+flutter:
+  uses-material-design: true
