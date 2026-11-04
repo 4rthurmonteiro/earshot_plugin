@@ -4,6 +4,9 @@ import 'package:earshot_capture_platform_interface/earshot_capture_platform_inte
 import 'package:test/test.dart';
 
 void main() {
+  // Built at runtime so that equal values are not canonicalized consts.
+  final rate = SampleRate.values.last;
+
   group(SampleRate, () {
     test('exposes the rate in hertz', () {
       expect(SampleRate.hz16000.hz, 16000);
@@ -28,11 +31,14 @@ void main() {
       );
     });
 
-    test('has a consistent hashCode', () {
-      expect(
-        const CaptureConfig(sampleRate: SampleRate.hz44100).hashCode,
-        const CaptureConfig(sampleRate: SampleRate.hz44100).hashCode,
-      );
+    test('treats separately built equal values as equal', () {
+      final a = CaptureConfig(sampleRate: rate);
+      final b = CaptureConfig(sampleRate: rate);
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const CaptureConfig()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {

@@ -2,6 +2,9 @@ import 'package:earshot_classifier/earshot_classifier.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // Built at runtime so that equal values are not canonicalized consts.
+  final hits = int.parse('3');
+
   group(Smoothing, () {
     test('defaults to 2 hits within 2 seconds', () {
       const smoothing = Smoothing();
@@ -19,8 +22,14 @@ void main() {
       expect(const Smoothing(), isNot(const Smoothing(window: Duration.zero)));
     });
 
-    test('has a consistent hashCode', () {
-      expect(const Smoothing().hashCode, const Smoothing().hashCode);
+    test('treats separately built equal values as equal', () {
+      final a = Smoothing(hits: hits);
+      final b = Smoothing(hits: hits);
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const Smoothing()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {
@@ -66,11 +75,14 @@ void main() {
       );
     });
 
-    test('has a consistent hashCode', () {
-      expect(
-        const ClassifierOptions().hashCode,
-        const ClassifierOptions().hashCode,
-      );
+    test('treats separately built equal values as equal', () {
+      final a = ClassifierOptions(smoothing: Smoothing(hits: hits));
+      final b = ClassifierOptions(smoothing: Smoothing(hits: hits));
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const ClassifierOptions()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {

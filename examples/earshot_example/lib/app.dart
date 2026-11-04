@@ -21,10 +21,17 @@ class EarshotExampleApp extends StatelessWidget {
 /// Shows the microphone permission status and starts listening.
 class EarshotPage extends StatefulWidget {
   /// Creates the page.
-  const new({this.earshot = const Earshot(), super.key});
+  const new({
+    this.earshot = const Earshot(),
+    this.microphonePermission = const MicrophonePermission(),
+    super.key,
+  });
 
   /// The earshot instance the page listens with.
   final Earshot earshot;
+
+  /// Reads the microphone permission status.
+  final MicrophonePermission microphonePermission;
 
   @override
   State<EarshotPage> createState() => _EarshotPageState();
@@ -49,7 +56,7 @@ class _EarshotPageState extends State<EarshotPage> {
 
   Future<void> _readPermission() async {
     try {
-      final status = await MicrophonePermission.status();
+      final status = await widget.microphonePermission.status();
       if (mounted) setState(() => _permission = status.name);
     } on Object catch (error) {
       if (mounted) setState(() => _permission = 'Error: $error');

@@ -80,10 +80,15 @@ void main() {
   });
 
   group(UnsupportedEarshotCapture, () {
+    late UnsupportedEarshotCapture platform;
+
+    setUp(() => platform = UnsupportedEarshotCapture());
+
     test('completes every call with an error', () {
-      final platform = UnsupportedEarshotCapture();
       expect(platform.microphonePermissionStatus(), throwsA(_notImplemented));
+      expect(platform.requestMicrophonePermission(), throwsA(_notImplemented));
       expect(platform.pcm(const CaptureConfig()), emitsError(_notImplemented));
+      expect(platform.stateChanges(), emitsError(_notImplemented));
     });
   });
 }

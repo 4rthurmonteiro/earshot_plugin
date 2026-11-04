@@ -2,6 +2,10 @@ import 'package:earshot_plugin/earshot_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // Built at runtime so that equal values are not canonicalized consts.
+  final rate = SampleRate.values.last;
+  final message = 'web'.trim();
+
   group(Earshot, () {
     test('listen returns a stream that errors and does not throw', () {
       late Stream<EarshotEvent> stream;
@@ -35,8 +39,14 @@ void main() {
       );
     });
 
-    test('has a consistent hashCode', () {
-      expect(const EarshotOptions().hashCode, const EarshotOptions().hashCode);
+    test('treats separately built equal values as equal', () {
+      final a = EarshotOptions(capture: CaptureConfig(sampleRate: rate));
+      final b = EarshotOptions(capture: CaptureConfig(sampleRate: rate));
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const EarshotOptions()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {
@@ -126,11 +136,14 @@ void main() {
       );
     });
 
-    test('has a consistent hashCode', () {
-      expect(
-        const EarshotException(EarshotErrorCode.unknown).hashCode,
-        const EarshotException(EarshotErrorCode.unknown).hashCode,
-      );
+    test('treats separately built equal values as equal', () {
+      final a = EarshotException(EarshotErrorCode.unsupported, message);
+      final b = EarshotException(EarshotErrorCode.unsupported, message);
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const EarshotException(EarshotErrorCode.unsupported)));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {

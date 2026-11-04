@@ -12,8 +12,14 @@ class _MockEarshotCapturePlatform extends Mock
 
 void main() {
   late EarshotCapturePlatform platform;
+  late EarshotCapturePlatform initialInstance;
 
-  setUpAll(() => registerFallbackValue(const CaptureConfig()));
+  setUpAll(() {
+    registerFallbackValue(const CaptureConfig());
+    initialInstance = EarshotCapturePlatform.instance;
+  });
+
+  tearDown(() => EarshotCapturePlatform.instance = initialInstance);
 
   setUp(() {
     platform = _MockEarshotCapturePlatform();
@@ -59,10 +65,17 @@ void main() {
           .thenAnswer((_) async => MicrophonePermissionStatus.granted);
 
       expect(
-        await MicrophonePermission.status(),
+        await const MicrophonePermission().status(),
         MicrophonePermissionStatus.granted,
       );
       verify(platform.microphonePermissionStatus).called(1);
+    });
+
+    test('status forwards platform errors', () {
+      final error = StateError('host unavailable');
+      when(platform.microphonePermissionStatus).thenThrow(error);
+
+      expect(() => const MicrophonePermission().status(), throwsA(same(error)));
     });
 
     test('request delegates to the platform', () async {
@@ -70,7 +83,7 @@ void main() {
           .thenAnswer((_) async => MicrophonePermissionStatus.denied);
 
       expect(
-        await MicrophonePermission.request(),
+        await const MicrophonePermission().request(),
         MicrophonePermissionStatus.denied,
       );
       verify(platform.requestMicrophonePermission).called(1);

@@ -15,11 +15,9 @@ dependencies:
     sdk: flutter
 
 dev_dependencies:
-  earshot_capture_platform_interface: ^0.0.1
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.5
-  plugin_platform_interface: ^2.1.8
   very_good_analysis: ^11.0.0
 
 flutter:

@@ -11,6 +11,10 @@ class _MockEarshotClassifierPlatform extends Mock
 void main() {
   group(EarshotClassifier, () {
     late EarshotClassifierPlatform platform;
+    late EarshotClassifierPlatform initialInstance;
+
+    setUpAll(() => initialInstance = EarshotClassifierPlatform.instance);
+    tearDown(() => EarshotClassifierPlatform.instance = initialInstance);
 
     setUp(() {
       platform = _MockEarshotClassifierPlatform();

@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
 > [!WARNING]
-> **Pre-release (0.0.1, API preview).** The public types are final for review, but most calls are not implemented yet and complete with an `UnimplementedError`. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
+> **Pre-release (0.0.1, API preview).** The public types are published for review and may still change in 0.x. Most calls are not implemented yet and complete with an `UnimplementedError`. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
 
 The pure Dart platform interface for [`earshot_capture`](https://pub.dev/packages/earshot_capture). Apps should depend on `earshot_capture` instead.
 

@@ -3,7 +3,7 @@ description: "Pre-release: on-device microphone capture for Flutter as a float32
 version: 0.0.1
 repository: https://github.com/4rthurmonteiro/earshot_plugin/tree/main/packages/earshot_capture/earshot_capture
 issue_tracker: https://github.com/4rthurmonteiro/earshot_plugin/issues
-topics: [audio, microphone, pcm, recording]
+topics: [audio, microphone, pcm]
 
 environment:
   sdk: ^3.13.0

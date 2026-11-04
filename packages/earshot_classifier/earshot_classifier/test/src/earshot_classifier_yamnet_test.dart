@@ -4,6 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group(EarshotClassifierYamnet, () {
+    late EarshotClassifierPlatform initialInstance;
+
+    setUpAll(() => initialInstance = EarshotClassifierPlatform.instance);
+    tearDown(() => EarshotClassifierPlatform.instance = initialInstance);
+
     test('registerWith sets the platform instance', () {
       EarshotClassifierYamnet.registerWith();
       expect(

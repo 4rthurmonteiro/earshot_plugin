@@ -1,6 +1,7 @@
 import 'package:earshot_capture_darwin/earshot_capture_darwin.dart';
 import 'package:earshot_capture_darwin/src/messages.g.dart';
 import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -12,6 +13,10 @@ void main() {
   group(EarshotCaptureDarwin, () {
     late EarshotCaptureHostApi hostApi;
     late EarshotCaptureDarwin platform;
+    late EarshotCapturePlatform initialInstance;
+
+    setUpAll(() => initialInstance = EarshotCapturePlatform.instance);
+    tearDown(() => EarshotCapturePlatform.instance = initialInstance);
 
     setUp(() {
       hostApi = _MockEarshotCaptureHostApi();
@@ -45,6 +50,13 @@ void main() {
           verify(hostApi.microphonePermissionStatus).called(1);
         });
       }
+    });
+
+    test('microphonePermissionStatus forwards host errors', () {
+      final error = PlatformException(code: 'channel-error');
+      when(hostApi.microphonePermissionStatus).thenThrow(error);
+
+      expect(platform.microphonePermissionStatus(), throwsA(same(error)));
     });
 
     test('requestMicrophonePermission completes with an error', () {

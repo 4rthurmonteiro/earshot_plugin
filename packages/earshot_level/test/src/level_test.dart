@@ -5,6 +5,9 @@ import 'package:earshot_level/earshot_level.dart';
 import 'package:test/test.dart';
 
 void main() {
+  // Built at runtime so that equal values are not canonicalized consts.
+  final offset = double.parse('1.5');
+
   group(Response, () {
     test('exposes the IEC 61672 time constants', () {
       expect(Response.fast.timeConstant, const Duration(milliseconds: 125));
@@ -26,11 +29,14 @@ void main() {
       expect(const Calibration(), isNot(const Calibration(offsetDb: 1.5)));
     });
 
-    test('has a consistent hashCode', () {
-      expect(
-        const Calibration(offsetDb: 2).hashCode,
-        const Calibration(offsetDb: 2).hashCode,
-      );
+    test('treats separately built equal values as equal', () {
+      final a = Calibration(offsetDb: offset);
+      final b = Calibration(offsetDb: offset);
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const Calibration()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {
@@ -65,8 +71,14 @@ void main() {
       );
     });
 
-    test('has a consistent hashCode', () {
-      expect(const LevelOptions().hashCode, const LevelOptions().hashCode);
+    test('treats separately built equal values as equal', () {
+      final a = LevelOptions(calibration: Calibration(offsetDb: offset));
+      final b = LevelOptions(calibration: Calibration(offsetDb: offset));
+      expect(identical(a, b), isFalse);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(const LevelOptions()));
+      expect(a, isNot(Object()));
     });
 
     test('has a readable toString', () {
