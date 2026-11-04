@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
 > [!WARNING]
-> **Pre-release (0.0.1, API preview).** The public types are published for review, but most calls are not implemented yet and complete with an `UnimplementedError`. The [feature checklist](#feature-checklist) shows what works today.
+> **Pre-release (0.1.0).** Capture, level metering and sound classification work on Android, iOS and macOS. The public API may still change before 1.0.0. The [feature checklist](#feature-checklist) shows what works today.
 
 On-device ambient listening for Flutter. earshot tells your app **how loud it is**, in dB(A) with Leq and calibration, and **what is sounding**, through sound classification. It has the same API on Android, iOS and macOS.
 
@@ -55,29 +55,29 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 ### 0.1.0: capture, level and classification
 
 **earshot_capture**
-- [x] Microphone permission request
-- [x] PCM float32 mono stream at 16 / 44.1 / 48 kHz (Android, iOS, macOS)
-- [x] Capture state changes
+- [x] Microphone permission request (0.1.0)
+- [x] PCM float32 mono stream at 16 / 44.1 / 48 kHz (Android, iOS, macOS) (0.1.0)
+- [x] Capture state changes (0.1.0)
 - [ ] Interruption handling (calls, Siri, Android input silencing) with auto-resume, without taking audio focus
-- [x] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback)
+- [x] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback) (0.1.0)
 
 **earshot_level**
-- [x] A and Z weighting (IEC 61672, ±0.5 dB at 10 frequencies)
-- [x] C weighting
-- [x] Fast / Slow / Impulse response
-- [x] Leq (session, 1 s, 60 s)
-- [x] Calibration offset
+- [x] A and Z weighting (IEC 61672, ±0.5 dB at 10 frequencies) (0.1.0)
+- [x] C weighting (0.1.0)
+- [x] Fast / Slow / Impulse response (0.1.0)
+- [x] Leq (session, 1 s, 60 s) (0.1.0)
+- [x] Calibration offset (0.1.0)
 
 **earshot_classifier**
-- [x] YAMNet backend via LiteRT, in an isolate (every platform)
-- [x] Apple SoundAnalysis backend (iOS 15+, macOS 12+)
-- [x] Backend selection (`auto`, `apple`, `yamnet`)
-- [x] Sound vocabulary (`EarshotSound`) with validated label mapping
-- [x] Confidence threshold and smoothing (N hits within T seconds)
+- [x] YAMNet backend via LiteRT, in an isolate (every platform) (0.1.0)
+- [x] Apple SoundAnalysis backend (iOS 15+, macOS 12+) (0.1.0)
+- [x] Backend selection (`auto`, `apple`, `yamnet`) (0.1.0)
+- [x] Sound vocabulary (`EarshotSound`) with validated label mapping (0.1.0)
+- [x] Confidence threshold and smoothing (N hits within T seconds) (0.1.0)
 
 **earshot_plugin**
-- [x] `Earshot.listen` combining level and classification
-- [x] `EarshotException` error codes on stream errors
+- [x] `Earshot.listen` combining level and classification (0.1.0)
+- [x] `EarshotException` error codes on stream errors (0.1.0)
 
 ### 0.2.0: consolidation
 

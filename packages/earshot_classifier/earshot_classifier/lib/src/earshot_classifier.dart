@@ -100,7 +100,7 @@ class EarshotClassifier {
     try {
       return await platform.isAvailable();
     } on Object {
-      // A platform that cannot tell, such as the 0.0.1 stub, is unavailable.
+      // A platform that cannot tell, such as a stub, is unavailable.
       return false;
     }
   }

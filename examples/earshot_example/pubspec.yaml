@@ -10,7 +10,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  earshot_plugin: ^0.0.1
+  earshot_plugin: ^0.1.0
   flutter:
     sdk: flutter
 

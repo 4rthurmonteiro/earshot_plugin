@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'earshot_capture_darwin'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'iOS and macOS implementation of earshot_capture.'
   s.description      = <<-DESC
 iOS and macOS implementation of earshot_capture: on-device microphone capture.

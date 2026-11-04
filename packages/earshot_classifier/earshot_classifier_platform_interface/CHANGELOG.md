@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - Add `EarshotSound`, the cross-backend sound vocabulary. Each sound lists the Apple and YAMNet labels it maps to, validated against the official label lists.
 - Add `SoundVocabulary` to map raw labels to sounds and groups. Unmapped labels fall back to their group, and silence is never reported.

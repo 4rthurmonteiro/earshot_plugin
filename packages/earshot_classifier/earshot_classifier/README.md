@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
 > [!WARNING]
-> **Pre-release.** The API may still change in 0.x. The YAMNet backend works; the Apple SoundAnalysis backend is not implemented yet, so `auto` uses YAMNet everywhere for now. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
+> **Pre-release (0.x).** The public API may still change in 0.x. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
 
 On-device sound classification for Flutter. It uses Apple SoundAnalysis on iOS and macOS and Google YAMNet (via LiteRT) everywhere else, and maps both to the same `EarshotSound` vocabulary and sound groups.
 

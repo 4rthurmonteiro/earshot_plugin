@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - Microphone permission request through the foreground `Activity`.
 - PCM capture with `AudioRecord` in `ENCODING_PCM_FLOAT` on a background thread, from `UNPROCESSED` when the device supports it and `VOICE_RECOGNITION` otherwise.
