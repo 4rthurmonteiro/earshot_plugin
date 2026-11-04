@@ -12,9 +12,9 @@ environment:
 resolution: workspace
 
 dependencies:
-  earshot_capture: ^0.0.1
-  earshot_classifier: ^0.0.1
-  earshot_level: ^0.0.1
+  earshot_capture: ">=0.0.1 <0.2.0"
+  earshot_classifier: ">=0.0.1 <0.2.0"
+  earshot_level: ">=0.0.1 <0.2.0"
   flutter:
     sdk: flutter
   meta: ^1.15.0

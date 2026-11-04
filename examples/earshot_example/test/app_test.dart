@@ -49,12 +49,16 @@ void main() {
     expect(textOf(tester, 'permission'), 'Error: Bad state: boom');
   });
 
-  testWidgets('shows the 0.0.1 error when Start is tapped', (tester) async {
-    await tester.pumpWidget(buildPage());
+  testWidgets('shows stream errors', (tester) async {
+    final earshot = _MockEarshot();
+    const error = EarshotException(EarshotErrorCode.permissionDenied);
+    when(earshot.listen).thenAnswer((_) => Stream.error(error));
+
+    await tester.pumpWidget(buildPage(earshot: earshot));
     await tester.tap(find.text('Start'));
     await tester.pump();
 
-    expect(textOf(tester, 'status'), startsWith('UnimplementedError'));
+    expect(textOf(tester, 'status'), error.toString());
   });
 
   testWidgets('shows events as they arrive', (tester) async {

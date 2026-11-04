@@ -11,12 +11,23 @@ class EarshotEvent {
   const new({required this.timestamp, this.level, this.detections = const []});
 
   /// The time of the event, relative to the start of listening.
+  ///
+  /// The timestamp of [level] when there is one, and otherwise that of the
+  /// last of [detections].
   final Duration timestamp;
 
   /// The sound level, or `null` if level metering is off.
+  ///
+  /// Also `null` in the last event of a stream whose capture ended, when
+  /// that event carries only detections confirmed after the last reading.
   final LevelReading? level;
 
-  /// The sounds confirmed since the previous event. Often empty.
+  /// The sounds the classifier confirmed since the previous event, in the
+  /// order it confirmed them. Often empty.
+  ///
+  /// Detection timestamps come from the classifier's own clock. When Apple
+  /// SoundAnalysis runs its own microphone session, it is not aligned with
+  /// the level timestamps.
   final List<SoundDetection> detections;
 
   @override
