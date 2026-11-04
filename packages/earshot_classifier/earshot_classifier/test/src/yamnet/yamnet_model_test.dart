@@ -38,7 +38,6 @@ void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     packageDirectory = Directory.current;
-    bundle = _FileAssetBundle(packageDirectory.path);
     // Under `flutter test`, flutter_litert finds its native library through
     // `.dart_tool/package_config.json` in the working directory. In a pub
     // workspace that file lives at the workspace root only, three levels up,
@@ -48,6 +47,9 @@ void main() {
   });
 
   tearDownAll(() => Directory.current = packageDirectory);
+
+  // A fresh bundle per test, so recorded keys don't depend on test order.
+  setUp(() => bundle = _FileAssetBundle(packageDirectory.path));
 
   group(LiteRtYamnetInterpreter, () {
     test('loads the bundled model and scores a window', () async {
