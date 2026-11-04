@@ -17,9 +17,16 @@ void main() {
       );
     });
 
+    test('isAvailable completes with an error', () {
+      expect(
+        EarshotClassifierDarwin().isAvailable(),
+        throwsA(isA<UnimplementedError>()),
+      );
+    });
+
     test('detections returns a stream that errors', () {
       expect(
-        EarshotClassifierDarwin().detections(),
+        EarshotClassifierDarwin().detections(const ClassifierConfig()),
         emitsError(isA<UnimplementedError>()),
       );
     });

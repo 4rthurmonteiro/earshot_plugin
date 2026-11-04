@@ -50,9 +50,18 @@ void main() {
       );
     });
 
+    test('isAvailable completes with an error by default', () {
+      expect(
+        _ExtendingEarshotClassifierPlatform().isAvailable(),
+        throwsA(_notImplemented),
+      );
+    });
+
     test('detections returns a stream that errors by default', () {
       expect(
-        _ExtendingEarshotClassifierPlatform().detections(),
+        _ExtendingEarshotClassifierPlatform().detections(
+          const ClassifierConfig(),
+        ),
         emitsError(_notImplemented),
       );
     });
@@ -61,7 +70,7 @@ void main() {
   group(UnsupportedEarshotClassifier, () {
     test('detections returns a stream that errors', () {
       expect(
-        UnsupportedEarshotClassifier().detections(),
+        UnsupportedEarshotClassifier().detections(const ClassifierConfig()),
         emitsError(_notImplemented),
       );
     });

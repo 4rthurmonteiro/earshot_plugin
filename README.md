@@ -69,11 +69,11 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 - [x] Calibration offset
 
 **earshot_classifier**
-- [ ] YAMNet backend via LiteRT, in an isolate (every platform)
+- [x] YAMNet backend via LiteRT, in an isolate (every platform)
 - [ ] Apple SoundAnalysis backend (iOS 15+, macOS 12+)
-- [ ] Backend selection (`auto`, `apple`, `yamnet`)
-- [ ] Sound vocabulary (`EarshotSound`) with validated label mapping
-- [ ] Confidence threshold and smoothing (N hits within T seconds)
+- [x] Backend selection (`auto`, `apple`, `yamnet`)
+- [x] Sound vocabulary (`EarshotSound`) with validated label mapping
+- [x] Confidence threshold and smoothing (N hits within T seconds)
 
 **earshot_plugin**
 - [ ] `Earshot.listen` combining level and classification
