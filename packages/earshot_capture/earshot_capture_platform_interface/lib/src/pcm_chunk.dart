@@ -22,6 +22,9 @@ class PcmChunk {
   final SampleRate sampleRate;
 
   /// The time of the first sample, relative to the start of capture.
+  ///
+  /// The first chunk of every subscription has a timestamp of zero. After an
+  /// interruption, the timestamps jump forward by the length of the gap.
   final Duration timestamp;
 
   @override
