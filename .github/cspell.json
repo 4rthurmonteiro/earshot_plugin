@@ -28,6 +28,8 @@
   ],
   "words": [
     "behaviour",
+    "biquad",
+    "biquads",
     "Blackman",
     "dartdoc",
     "darwin",
@@ -48,6 +50,7 @@
     "podspec",
     "podspecs",
     "polyphase",
+    "prewarp",
     "Resampler",
     "resampler",
     "resampling",
