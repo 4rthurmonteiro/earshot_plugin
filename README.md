@@ -62,11 +62,11 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 - [x] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback)
 
 **earshot_level**
-- [ ] A and Z weighting (IEC 61672, ±0.5 dB at 10 frequencies)
-- [ ] C weighting
-- [ ] Fast / Slow / Impulse response
-- [ ] Leq (session, 1 s, 60 s)
-- [ ] Calibration offset
+- [x] A and Z weighting (IEC 61672, ±0.5 dB at 10 frequencies)
+- [x] C weighting
+- [x] Fast / Slow / Impulse response
+- [x] Leq (session, 1 s, 60 s)
+- [x] Calibration offset
 
 **earshot_classifier**
 - [ ] YAMNet backend via LiteRT, in an isolate (every platform)

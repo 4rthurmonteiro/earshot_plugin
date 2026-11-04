@@ -62,6 +62,8 @@ void main() {
     const level = LevelReading(
       db: 60,
       leq: 55,
+      leq1s: 58,
+      leq60s: 57,
       weighting: Weighting.a,
       timestamp: Duration(seconds: 1),
     );
