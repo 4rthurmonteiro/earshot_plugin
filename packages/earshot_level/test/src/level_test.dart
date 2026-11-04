@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
@@ -13,6 +14,18 @@ void main() {
       expect(Response.fast.timeConstant, const Duration(milliseconds: 125));
       expect(Response.slow.timeConstant, const Duration(seconds: 1));
       expect(Response.impulse.timeConstant, const Duration(milliseconds: 35));
+    });
+
+    test('decays with the IEC 61672 time constants', () {
+      expect(
+        Response.fast.decayTimeConstant,
+        const Duration(milliseconds: 125),
+      );
+      expect(Response.slow.decayTimeConstant, const Duration(seconds: 1));
+      expect(
+        Response.impulse.decayTimeConstant,
+        const Duration(milliseconds: 1500),
+      );
     });
   });
 
@@ -94,11 +107,15 @@ void main() {
     LevelReading reading({
       double db = 60,
       double leq = 55,
+      double leq1s = 58,
+      double leq60s = 57,
       Weighting weighting = Weighting.a,
       Duration timestamp = const Duration(seconds: 1),
     }) => LevelReading(
       db: db,
       leq: leq,
+      leq1s: leq1s,
+      leq60s: leq60s,
       weighting: weighting,
       timestamp: timestamp,
     );
@@ -107,6 +124,8 @@ void main() {
       expect(reading(), reading());
       expect(reading(), isNot(reading(db: 61)));
       expect(reading(), isNot(reading(leq: 56)));
+      expect(reading(), isNot(reading(leq1s: 56)));
+      expect(reading(), isNot(reading(leq60s: 56)));
       expect(reading(), isNot(reading(weighting: Weighting.c)));
       expect(reading(), isNot(reading(timestamp: Duration.zero)));
     });
@@ -118,8 +137,8 @@ void main() {
     test('has a readable toString', () {
       expect(
         reading().toString(),
-        'LevelReading(db: 60.0, leq: 55.0, weighting: Weighting.a, '
-        'timestamp: 0:00:01.000000)',
+        'LevelReading(db: 60.0, leq: 55.0, leq1s: 58.0, leq60s: 57.0, '
+        'weighting: Weighting.a, timestamp: 0:00:01.000000)',
       );
     });
   });
@@ -129,18 +148,89 @@ void main() {
       expect(const LevelMeter().options, const LevelOptions());
     });
 
-    test('returns a stream that errors and does not throw', () {
-      final pcm = Stream.value(
+    PcmChunk chunk(int length, {Duration timestamp = Duration.zero}) =>
         PcmChunk(
-          samples: Float32List(4),
+          samples: Float32List(length),
           sampleRate: SampleRate.hz16000,
-          timestamp: Duration.zero,
+          timestamp: timestamp,
+        );
+
+    test('emits one reading per non-empty chunk', () async {
+      final pcm = Stream.fromIterable([
+        chunk(160),
+        chunk(0),
+        chunk(160, timestamp: const Duration(milliseconds: 10)),
+      ]);
+      final readings = await pcm.transform(const LevelMeter()).toList();
+      expect(readings, hasLength(2));
+      expect(readings.map((r) => r.timestamp), const [
+        Duration(milliseconds: 10),
+        Duration(milliseconds: 20),
+      ]);
+      expect(readings.first.db, LevelReading.floorDb);
+    });
+
+    test('measures with its options', () async {
+      const meter = LevelMeter(
+        options: LevelOptions(
+          weighting: Weighting.c,
+          calibration: Calibration(offsetDb: 30),
         ),
       );
-      expect(
-        pcm.transform(const LevelMeter()),
-        emitsError(isA<UnimplementedError>()),
+      final reading = await Stream.value(chunk(160)).transform(meter).single;
+      expect(reading.weighting, Weighting.c);
+      expect(reading.db, LevelReading.floorDb + 30);
+    });
+
+    test('forwards errors and keeps measuring', () async {
+      final controller = StreamController<PcmChunk>();
+      final events = controller.stream.transform(const LevelMeter());
+      final expectation = expectLater(
+        events,
+        emitsInOrder([
+          emitsError(isA<StateError>()),
+          isA<LevelReading>(),
+          emitsDone,
+        ]),
       );
+      controller
+        ..addError(StateError('mic'))
+        ..add(chunk(16));
+      await controller.close();
+      await expectation;
+    });
+
+    test('starts a new session for each listen', () async {
+      final source = Stream<PcmChunk>.multi((controller) {
+        controller.add(chunk(16));
+        unawaited(controller.close());
+      });
+      final stream = source.transform(const LevelMeter());
+      final first = await stream.single;
+      final second = await stream.single;
+      expect(second, first);
+    });
+
+    test('pauses, resumes and cancels the PCM subscription', () async {
+      var paused = false;
+      var cancelled = false;
+      final controller = StreamController<PcmChunk>(
+        onPause: () => paused = true,
+        onResume: () => paused = false,
+        onCancel: () => cancelled = true,
+      );
+      final subscription = controller.stream
+          .transform(const LevelMeter())
+          .listen((_) {});
+      await Future<void>.delayed(Duration.zero);
+      subscription.pause();
+      await Future<void>.delayed(Duration.zero);
+      expect(paused, isTrue);
+      subscription.resume();
+      await Future<void>.delayed(Duration.zero);
+      expect(paused, isFalse);
+      await subscription.cancel();
+      expect(cancelled, isTrue);
     });
   });
 }
