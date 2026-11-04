@@ -1,6 +1,6 @@
 /// The message carried by the [UnimplementedError] that every classifier API
-/// not yet implemented in this API preview completes with.
+/// not implemented by a platform completes with.
 const kClassifierNotImplementedMessage =
-    'Not implemented yet: earshot_classifier 0.0.1 is an API preview. '
+    'Not implemented yet by this earshot_classifier platform. '
     'See the feature checklist at '
     'https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist';

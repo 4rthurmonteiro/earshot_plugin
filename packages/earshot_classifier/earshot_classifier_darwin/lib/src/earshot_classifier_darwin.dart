@@ -4,8 +4,11 @@ import 'package:earshot_classifier_platform_interface/earshot_classifier_platfor
 /// The iOS and macOS implementation of [EarshotClassifierPlatform], backed by
 /// the [ClassifierBackend.apple] backend (SoundAnalysis).
 ///
-/// Not implemented in 0.0.1: every method completes with an
-/// [UnimplementedError].
+/// Not implemented yet: every method completes with an [UnimplementedError],
+/// so `ClassifierBackend.auto` falls back to YAMNet on iOS and macOS. The
+/// SoundAnalysis backend will implement
+/// [EarshotClassifierPlatform.isAvailable] and
+/// [EarshotClassifierPlatform.detections].
 /// {@endtemplate}
 class EarshotClassifierDarwin extends EarshotClassifierPlatform {
   /// {@macro earshot_classifier_darwin}
