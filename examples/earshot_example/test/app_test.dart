@@ -58,6 +58,20 @@ void main() {
     expect(find.text('earshot $kEarshotVersion'), findsOneWidget);
   });
 
+  testWidgets('refreshes the status after a permission request', (
+    tester,
+  ) async {
+    when(microphonePermission.request)
+        .thenAnswer((_) async => MicrophonePermissionStatus.denied);
+
+    await tester.pumpWidget(buildPage());
+    await tester.pump();
+    await tester.tap(find.text('Request permission'));
+    await tester.pump();
+
+    expect(textOf(tester, 'permission'), 'denied');
+  });
+
   testWidgets('shows a stream error and stops', (tester) async {
     final earshot = _MockEarshot();
     const error = EarshotException(EarshotErrorCode.permissionDenied);

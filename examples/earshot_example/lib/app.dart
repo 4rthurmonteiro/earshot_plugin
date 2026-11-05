@@ -137,31 +137,41 @@ class _EarshotPageState extends State<EarshotPage> {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(title: const Text('earshot $kEarshotVersion')),
-      body: ListView(
+      // A Column, not a ListView: a lazy list would rebuild or dispose the
+      // capture demo as detections are added or it scrolls off screen,
+      // which stops its capture.
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        children: [
-          Text('Microphone permission', style: textTheme.titleMedium),
-          Text(_permission, key: const Key('permission')),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _listening ? _stop : _start,
-            child: Text(_listening ? 'Stop' : 'Start'),
-          ),
-          const SizedBox(height: 16),
-          Text(_status, key: const Key('status')),
-          const SizedBox(height: 8),
-          Text(_level, key: const Key('level'), style: textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Text('Recent detections', style: textTheme.titleMedium),
-          Text(
-            'earshot is informational and is not a certified detector.',
-            style: textTheme.bodySmall,
-          ),
-          for (final (index, detection) in _detections.indexed)
-            Text(detection, key: Key('detection$index')),
-          const SizedBox(height: 24),
-          CaptureDemo(microphonePermission: widget.microphonePermission),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Microphone permission', style: textTheme.titleMedium),
+            Text(_permission, key: const Key('permission')),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _listening ? _stop : _start,
+              child: Text(_listening ? 'Stop' : 'Start'),
+            ),
+            const SizedBox(height: 16),
+            Text(_status, key: const Key('status')),
+            const SizedBox(height: 8),
+            Text(_level, key: const Key('level'), style: textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Text('Recent detections', style: textTheme.titleMedium),
+            Text(
+              'earshot is informational and is not a certified detector.',
+              style: textTheme.bodySmall,
+            ),
+            for (final (index, detection) in _detections.indexed)
+              Text(detection, key: Key('detection$index')),
+            const SizedBox(height: 24),
+            CaptureDemo(
+              microphonePermission: widget.microphonePermission,
+              onPermissionChanged: (status) =>
+                  setState(() => _permission = status.name),
+            ),
+          ],
+        ),
       ),
     );
   }

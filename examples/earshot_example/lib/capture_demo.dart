@@ -15,8 +15,12 @@ class CaptureDemo extends StatefulWidget {
   const new({
     this.capture = const EarshotCapture(),
     this.microphonePermission = const MicrophonePermission(),
+    this.onPermissionChanged,
     super.key,
   });
+
+  /// Called with the status a permission request returns.
+  final ValueChanged<MicrophonePermissionStatus>? onPermissionChanged;
 
   /// Streams PCM from the microphone.
   final EarshotCapture capture;
@@ -50,6 +54,7 @@ class _CaptureDemoState extends State<CaptureDemo> {
   Future<void> _request() async {
     try {
       final status = await widget.microphonePermission.request();
+      widget.onPermissionChanged?.call(status);
       if (mounted) setState(() => _permission = status.name);
     } on Object catch (error) {
       if (mounted) setState(() => _permission = 'Error: $error');
