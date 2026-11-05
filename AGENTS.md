@@ -68,6 +68,7 @@ dart run melos run pigeon           # regenerate Pigeon code; commit the result
 - **Darwin:**
   - iOS and macOS share sources (`sharedDarwinSource: true`).
   - Every darwin package ships both `darwin/<pkg>/Package.swift` (SwiftPM) and a podspec, and they must keep identical sources and minimum OS versions.
+  - On iOS, both darwin packages activate and release the `AVAudioSession` only through `EarshotAudioSession.swift`, and the two copies of that file must stay identical (ADR 0017).
   - Minimum OS versions: `earshot_capture_darwin` iOS 13 / macOS 10.15, `earshot_classifier_darwin` iOS 15 / macOS 12. Never raise them without an ADR.
 - **Value types:** write `==`, `hashCode` and `toString` by hand (no `equatable`). Prefer enums to asserts for constrained values.
 - **No `print`** in `lib/`. Each `listen()` gets its own subscription, and cancelling it stops the native work.
