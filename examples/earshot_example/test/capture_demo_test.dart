@@ -73,7 +73,7 @@ void main() {
     pcm
       ..add(_chunk([0.5, -0.5]))
       ..add(_chunk([]));
-    await tester.pump();
+    await tester.pump(kRefreshInterval);
 
     expect(textOf(tester, 'captureState'), 'capturing');
     expect(textOf(tester, 'capturePcm'), '2 chunks, -Infinity dBFS');
@@ -89,7 +89,7 @@ void main() {
     await tester.pumpWidget(buildDemo());
     await tester.tap(find.text('Start capture'));
     pcm.add(_chunk([0.5, -0.5]));
-    await tester.pump();
+    await tester.pump(kRefreshInterval);
 
     expect(textOf(tester, 'capturePcm'), '1 chunks, -6.0 dBFS');
   });

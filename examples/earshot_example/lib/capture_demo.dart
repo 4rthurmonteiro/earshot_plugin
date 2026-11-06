@@ -4,6 +4,10 @@ import 'dart:math' as math;
 import 'package:earshot_plugin/earshot_plugin.dart';
 import 'package:flutter/material.dart';
 
+/// How often the example screens show the latest values while listening, so
+/// they can be read during QA.
+const kRefreshInterval = Duration(milliseconds: 500);
+
 /// Requests the microphone permission and shows live capture statistics:
 /// the capture state, the chunk count and the RMS level in dBFS.
 class CaptureDemo extends StatefulWidget {
@@ -11,8 +15,12 @@ class CaptureDemo extends StatefulWidget {
   const new({
     this.capture = const EarshotCapture(),
     this.microphonePermission = const MicrophonePermission(),
+    this.onPermissionChanged,
     super.key,
   });
+
+  /// Called with the status a permission request returns.
+  final ValueChanged<MicrophonePermissionStatus>? onPermissionChanged;
 
   /// Streams PCM from the microphone.
   final EarshotCapture capture;
@@ -31,11 +39,13 @@ class _CaptureDemoState extends State<CaptureDemo> {
   int _chunks = 0;
   StreamSubscription<PcmChunk>? _pcmSubscription;
   StreamSubscription<CaptureState>? _stateSubscription;
+  Timer? _refresh;
 
   bool get _capturing => _pcmSubscription != null;
 
   @override
   void dispose() {
+    _refresh?.cancel();
     unawaited(_pcmSubscription?.cancel());
     unawaited(_stateSubscription?.cancel());
     super.dispose();
@@ -44,6 +54,7 @@ class _CaptureDemoState extends State<CaptureDemo> {
   Future<void> _request() async {
     try {
       final status = await widget.microphonePermission.request();
+      widget.onPermissionChanged?.call(status);
       if (mounted) setState(() => _permission = status.name);
     } on Object catch (error) {
       if (mounted) setState(() => _permission = 'Error: $error');
@@ -52,16 +63,19 @@ class _CaptureDemoState extends State<CaptureDemo> {
 
   void _start() {
     _chunks = 0;
+    // Chunks arrive about 20 times a second; the screen shows the latest
+    // values at a readable pace.
+    _refresh = Timer.periodic(kRefreshInterval, (_) => setState(() {}));
     _stateSubscription = widget.capture.stateChanges().listen(
       (state) => setState(() => _state = state.name),
       onError: (Object _) {},
     );
     _pcmSubscription = widget.capture.pcm().listen(
-      (chunk) => setState(() {
+      (chunk) {
         _chunks++;
         _pcm =
             '$_chunks chunks, ${_rmsDecibels(chunk).toStringAsFixed(1)} dBFS';
-      }),
+      },
       onError: (Object error) => setState(() => _pcm = 'Error: $error'),
       onDone: () => unawaited(_stop()),
     );
@@ -69,6 +83,8 @@ class _CaptureDemoState extends State<CaptureDemo> {
   }
 
   Future<void> _stop() async {
+    _refresh?.cancel();
+    _refresh = null;
     final cancels = [
       ?_pcmSubscription?.cancel(),
       ?_stateSubscription?.cancel(),
