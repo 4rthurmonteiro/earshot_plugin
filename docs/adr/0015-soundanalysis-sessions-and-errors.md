@@ -1,6 +1,6 @@
 # 0015. SoundAnalysis sessions, errors and permission
 
-- Status: Accepted
+- Status: Accepted, amended by [0017](0017-shared-ios-audio-session.md)
 - Date: 2026-11-04
 
 ## Context
@@ -19,5 +19,5 @@ ADR 0014 says each `listen()` on `EarshotClassifierPlatform.detections` opens it
 ## Consequences
 
 - Concurrent apple sessions cost one microphone tap, and each keeps its own threshold.
-- Classification and `earshot_capture` still run two engines in one iOS audio session. Both use `.record` and `.measurement`, but whichever stops first deactivates the shared session, which may interrupt the other. The 0.2.0 shared capture tap removes this.
+- Classification and `earshot_capture` still run two engines in one iOS audio session. Both use `.record` and `.measurement`. ADR 0017 makes them share the session so that stopping one no longer interrupts the other. The 0.2.0 shared capture tap leaves a single engine.
 - The interruption paths need testing on real devices, which CI cannot do.

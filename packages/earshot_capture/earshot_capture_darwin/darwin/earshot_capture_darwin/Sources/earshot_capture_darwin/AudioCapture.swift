@@ -39,6 +39,9 @@ final class AudioCapture {
   private static let maxRetries = 10
   private static let retryDelay: TimeInterval = 0.5
 
+  /// Whether this capture counts as a user of the shared audio session.
+  private var holdsAudioSession = false
+
   /// Opens the microphone at `sampleRate` Hz.
   func start(sampleRate: Double, permission: PermissionStatusMessage) throws {
     stop()
@@ -51,10 +54,8 @@ final class AudioCapture {
     retries = 0
     do {
       #if os(iOS)
-        let session = AVAudioSession.sharedInstance()
-        // .measurement turns off the voice processing and automatic gain.
-        try session.setCategory(.record, mode: .measurement, options: [])
-        try session.setActive(true)
+        try EarshotAudioSession.acquire()
+        holdsAudioSession = true
       #endif
       try startEngine(baseMicros: 0)
     } catch let error as PigeonError {
@@ -76,8 +77,10 @@ final class AudioCapture {
     removeObservers()
     stopEngine()
     #if os(iOS)
-      if state != .idle {
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+      // Other earshot engines in the app may still use the session.
+      if holdsAudioSession {
+        holdsAudioSession = false
+        EarshotAudioSession.release()
       }
     #endif
     setState(.idle)

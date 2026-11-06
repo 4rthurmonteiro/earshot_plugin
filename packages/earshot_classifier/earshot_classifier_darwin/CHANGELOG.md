@@ -7,6 +7,7 @@
 - Each `listen()` gets its own analyzer session; concurrent sessions share one input tap. Cancelling the last one releases the microphone.
 - Stream errors are `CaptureException`s (`permissionDenied`, `audioUnavailable`, `unknown`). Classification never prompts for the microphone permission.
 - Handle interruptions as `earshot_capture` does: the engine restarts after calls, Siri, media services resets and device changes.
+- On iOS, share the app's audio session with the other earshot plugin: stopping capture or classification no longer stops the other (ADR 0017).
 
 ## 0.0.1
 

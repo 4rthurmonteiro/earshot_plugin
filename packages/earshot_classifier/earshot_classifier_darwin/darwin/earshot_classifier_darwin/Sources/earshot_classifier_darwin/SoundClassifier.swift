@@ -27,9 +27,8 @@ final class SoundClassifier {
   private var tapInstalled = false
   private var sessions: [Int64: Session] = [:]
   private var running = false
-  /// Whether the first session opened the microphone and the last one has
-  /// not released it yet.
-  private var active = false
+  /// Whether this classifier counts as a user of the shared audio session.
+  private var holdsAudioSession = false
   private var retries = 0
   /// Incremented on every engine (re)start and stop, to drop stale results
   /// and retries.
@@ -59,13 +58,10 @@ final class SoundClassifier {
     sessions[id] = session
 
     if sessions.count == 1 {
-      active = true
       do {
         #if os(iOS)
-          let audioSession = AVAudioSession.sharedInstance()
-          // .measurement turns off the voice processing and automatic gain.
-          try audioSession.setCategory(.record, mode: .measurement, options: [])
-          try audioSession.setActive(true)
+          try EarshotAudioSession.acquire()
+          holdsAudioSession = true
         #endif
         retries = 0
         try startEngine()
@@ -96,15 +92,15 @@ final class SoundClassifier {
 
   /// Stops every session and releases the microphone.
   func stopAll() {
-    let wasActive = active
-    active = false
     generation += 1
     sessions.removeAll()
     removeObservers()
     stopEngine()
     #if os(iOS)
-      if wasActive {
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+      // Other earshot engines in the app may still use the session.
+      if holdsAudioSession {
+        holdsAudioSession = false
+        EarshotAudioSession.release()
       }
     #endif
   }
