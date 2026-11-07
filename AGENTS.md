@@ -43,6 +43,7 @@ dart run melos run analyze          # flutter analyze --fatal-infos in every pac
 dart run melos run format:check     # dart format --set-exit-if-changed
 dart run melos run test             # very_good test --min-coverage 100 (needs very_good_cli)
 dart run melos run pigeon           # regenerate Pigeon code; commit the result
+dart run melos run release:check    # pub publish --dry-run for every unpublished package
 ```
 
 ## Conventions
@@ -87,12 +88,11 @@ dart run melos run pigeon           # regenerate Pigeon code; commit the result
 
 ## Releasing
 
-Packages are published manually by the maintainer. Publish them in this order, because each one resolves its siblings from pub.dev:
+Packages are published manually by the maintainer with Melos, which publishes them in dependency order (each one resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`:
 
-1. `earshot_capture_platform_interface`, `earshot_classifier_platform_interface`
-2. `earshot_capture_android`, `earshot_capture_darwin`, `earshot_classifier_darwin`
-3. `earshot_capture`, `earshot_classifier`
-4. `earshot_level`
-5. `earshot_plugin`
+```bash
+dart run melos run release:check    # pub publish --dry-run for every unpublished package
+dart run melos run release          # publish, tag and push the tags; needs a clean, up-to-date main
+```
 
-For each package, run `flutter pub publish --dry-run` and then `flutter pub publish`, then tag it `<package>-v<version>`. Never publish from an agent session.
+Never publish from an agent session.

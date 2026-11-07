@@ -41,6 +41,20 @@ melos:
       packageFilters:
         dirExists: test
 
+    release:check:
+      description: Validate every package that is not yet on pub.dev with pub publish --dry-run, in dependency order.
+      run: melos publish --dry-run --yes
+
+    release:
+      description: Publish every package that is not yet on pub.dev, in dependency order, then tag each one <package>-v<version> and push the tags. Run it from a clean, up-to-date main.
+      run: |
+        [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ] || { echo "Release from main."; exit 1; }
+        [ -z "$(git status --porcelain)" ] || { echo "The working tree is not clean."; exit 1; }
+        git fetch -q origin main
+        [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is not in sync with origin/main."; exit 1; }
+        melos publish --no-dry-run --git-tag-version
+        git push origin --tags
+
     pigeon:
       description: Regenerate Pigeon code in every package that owns pigeons/.
       exec: dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart

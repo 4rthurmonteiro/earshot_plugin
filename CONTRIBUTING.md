@@ -37,12 +37,11 @@ dart run melos run pigeon         # regenerate Pigeon code; commit the result
 
 ## Releasing
 
-Packages are published manually by the maintainer, in dependency order, because each one resolves its siblings from pub.dev:
+Packages are published manually by the maintainer, from a clean and up-to-date `main`. Melos publishes them in dependency order, because each one resolves its siblings from pub.dev, skips the versions that are already published, and tags each one `<package>-v<version>`:
 
-1. `earshot_capture_platform_interface`, `earshot_classifier_platform_interface`
-2. `earshot_capture_android`, `earshot_capture_darwin`, `earshot_classifier_darwin`
-3. `earshot_capture`, `earshot_classifier`
-4. `earshot_level`
-5. `earshot_plugin`
+```bash
+dart run melos run release:check    # validates every unpublished package with pub publish --dry-run
+dart run melos run release          # publishes, tags and pushes the tags
+```
 
-For each package, run `flutter pub publish --dry-run`, then `flutter pub publish`, then tag it `<package>-v<version>`.
+The first run needs `dart pub login`.
