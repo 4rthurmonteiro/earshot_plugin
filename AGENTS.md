@@ -91,7 +91,7 @@ dart run melos run release:check    # pub publish --dry-run for every unpublishe
 
 Releases are cut by the maintainer in two steps (ADR 0020):
 
-1. **Version.** From a clean, up-to-date `main`, `release:version` creates a `release/<date>` branch and runs `melos version`. Melos bumps every package changed since its `<package>-v<version>` tag, according to the Conventional Commits, and raises the constraints of the packages that depend on it. A hook turns each `## Unreleased` changelog heading into the new version. Open a PR from the branch, titled `chore(release): publish packages`, and squash-merge it.
+1. **Version.** From a clean, up-to-date `main`, `release:version` creates a `release/<date>` branch and runs `melos version`. Melos bumps every package changed since its `<package>-v<version>` tag, according to the Conventional Commits, and raises the constraints of the packages that depend on it. A hook turns each `## Unreleased` changelog heading into the new version and updates the podspec versions and the example's `kEarshotVersion`. Open a PR from the branch, titled `chore(release): publish packages`, and squash-merge it.
 2. **Publish.** From `main` after the merge, Melos publishes in dependency order (each package resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`.
 
 ```bash

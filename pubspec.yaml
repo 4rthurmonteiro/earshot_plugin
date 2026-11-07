@@ -39,7 +39,7 @@ melos:
 
         {new_package_versions}
       hooks:
-        preCommit: dart run tool/release_changelogs.dart
+        preCommit: dart run tool/version_hook.dart
 
   scripts:
     analyze:
