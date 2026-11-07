@@ -1,6 +1,6 @@
 # earshot brand assets
 
-The earshot mark is a stylised ear drawn as three concentric arcs that read
+The earshot mark is a stylized ear drawn as three concentric arcs that read
 both as an ear and as spreading sound waves, with a dot at the centre for the
 sound source. The palette is deliberately calm: teal sits between blue (trust,
 quiet) and green (nature, rest), and nothing in the kit is red, orange or neon.
@@ -21,4 +21,4 @@ quiet) and green (nature, rest), and nothing in the kit is red, orange or neon.
   script, not the SVGs. The wordmark uses Nunito with rounded-sans fallbacks,
   so the PNGs are the canonical rendered form.
 
-Rasterise on macOS with `qlmanage -t -s 1280 -o out file.svg`.
+Rasterize on macOS with `qlmanage -t -s 1280 -o out file.svg`.
