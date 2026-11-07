@@ -23,6 +23,24 @@ dev_dependencies:
 melos:
   repository: https://github.com/4rthurmonteiro/earshot_plugin
 
+  command:
+    version:
+      # Changelogs are written by hand under "## Unreleased" (ADR 0020).
+      updateChangelog: false
+      # Each package has its own changelog; there is no workspace one.
+      workspaceChangelog: false
+      # Tags are created when a version is published, by `release`.
+      gitTagVersion: false
+      # release:version fetches the tags; melos would pull, which fails on
+      # the new release branch, which has no upstream.
+      fetchTags: false
+      message: |
+        chore(release): publish packages
+
+        {new_package_versions}
+      hooks:
+        preCommit: dart run tool/version_hook.dart
+
   scripts:
     analyze:
       description: Run flutter analyze with --fatal-infos in every package.
@@ -49,6 +67,16 @@ melos:
         command: dart run "$MELOS_ROOT_PATH/tool/pana_check.dart"
       packageFilters:
         private: false
+
+    release:version:
+      description: Bump every package changed since its last release from Conventional Commits, on a new release/<date> branch, and commit. Run it from a clean, up-to-date main, then open a PR from the branch.
+      run: |
+        [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ] || { echo "Run release:version from main."; exit 1; }
+        [ -z "$(git status --porcelain)" ] || { echo "The working tree is not clean."; exit 1; }
+        git fetch -q --tags origin main
+        [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is not in sync with origin/main."; exit 1; }
+        git switch -c "release/$(date +%Y-%m-%d)"
+        melos version --yes
 
     release:check:
       description: Validate every package that is not yet on pub.dev with pub publish --dry-run, in dependency order.

@@ -33,18 +33,27 @@ CI requires every publishable package to get all of its pana points. pana resolv
 ## Pull requests
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/) for the PR title (`feat:`, `fix:`, `docs:`, `chore:` …). PRs are squash-merged, so the title becomes the commit message.
-- Update the `CHANGELOG.md` of every package you change.
+- Update the `CHANGELOG.md` of every package you change, under a `## Unreleased` heading at the top. The release replaces it with the new version.
+- The PR title's type decides the next version: `feat` and `fix` bump the patch below 1.0.0, and `!` bumps the minor.
 - If your PR implements an item of the feature checklist in the root [`README.md`](README.md), tick it (`- [x]`) in the same PR.
 - A new architectural decision needs a new ADR in `docs/adr/`.
 - CI builds the example for Android only. If your PR touches Swift or the darwin packages, build the example locally with `flutter build ios --simulator --debug` and `flutter build macos --debug` from `examples/earshot_example`, and say so in the PR.
 
 ## Releasing
 
-Packages are published manually by the maintainer, from a clean and up-to-date `main`. Melos publishes them in dependency order, because each one resolves its siblings from pub.dev, skips the versions that are already published, and tags each one `<package>-v<version>`:
+Releases are cut by the maintainer, from a clean and up-to-date `main`, in two steps:
+
+```bash
+dart run melos run release:version  # bumps versions from Conventional Commits on a new release/<date> branch
+```
+
+Open a PR from that branch, titled `chore(release): publish packages`, and squash-merge it. Then, from `main`:
 
 ```bash
 dart run melos run release:check    # validates every unpublished package with pub publish --dry-run
 dart run melos run release          # publishes without asking, tags and pushes the tags
 ```
+
+Melos publishes in dependency order, because each package resolves its siblings from pub.dev, and skips the versions that are already published.
 
 The first run needs `dart pub login`.

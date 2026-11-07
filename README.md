@@ -89,7 +89,7 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 ### 0.2.0: consolidation
 
 - [x] SoundAnalysis fed from the shared capture tap (single microphone session)
-- [ ] Release automation with `melos version` and Conventional Commits
+- [x] Release automation with `melos version` and Conventional Commits
 - [x] pana checks in CI
 
 ### 1.0.0: stable
