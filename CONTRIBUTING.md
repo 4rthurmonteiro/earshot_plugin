@@ -25,7 +25,10 @@ dart run melos run analyze        # flutter analyze --fatal-infos in every packa
 dart run melos run format:check   # dart format --set-exit-if-changed
 dart run melos run test           # very_good test with 100% coverage
 dart run melos run pigeon         # regenerate Pigeon code; commit the result
+dart run melos run pana           # pub.dev score with pana; needs `dart pub global activate pana`
 ```
+
+CI requires every publishable package to get all of its pana points. pana resolves dependencies from pub.dev, so a package that needs a sibling version that is not published yet is skipped with a warning until the release.
 
 ## Pull requests
 

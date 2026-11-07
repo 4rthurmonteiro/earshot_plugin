@@ -43,6 +43,7 @@ dart run melos run analyze          # flutter analyze --fatal-infos in every pac
 dart run melos run format:check     # dart format --set-exit-if-changed
 dart run melos run test             # very_good test --min-coverage 100 (needs very_good_cli)
 dart run melos run pigeon           # regenerate Pigeon code; commit the result
+dart run melos run pana             # pub.dev score of every publishable package (needs pana)
 dart run melos run release:check    # pub publish --dry-run for every unpublished package
 ```
 

@@ -22,6 +22,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0016](0016-umbrella-stream-composition-and-error-codes.md) | Umbrella stream composition and error codes | Accepted, amended by 0018 |
 | [0017](0017-shared-ios-audio-session.md) | Shared iOS audio session across the earshot plugins | Accepted, amended by 0018 |
 | [0018](0018-soundanalysis-on-the-shared-capture-tap.md) | SoundAnalysis on the shared capture tap | Accepted |
+| [0019](0019-pana-in-ci.md) | pana in CI | Accepted |
 
 ## Template
 

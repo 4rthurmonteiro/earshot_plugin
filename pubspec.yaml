@@ -41,6 +41,15 @@ melos:
       packageFilters:
         dirExists: test
 
+    pana:
+      description: Score every publishable package with pana and fail unless it gets every point. Packages that need an unreleased sibling version are skipped with a warning. Needs `dart pub global activate pana`.
+      exec:
+        # pana copies the whole workspace for each package; one at a time.
+        concurrency: 1
+        command: dart run "$MELOS_ROOT_PATH/tool/pana_check.dart"
+      packageFilters:
+        private: false
+
     release:check:
       description: Validate every package that is not yet on pub.dev with pub publish --dry-run, in dependency order.
       run: melos publish --dry-run --yes
