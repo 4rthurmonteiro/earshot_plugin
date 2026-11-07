@@ -45,6 +45,20 @@ jobs:
       - name: Fail if Pigeon output differs from the committed files
         run: git diff --exit-code
 
+  pana:
+    name: pub.dev score (pana)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart pub global activate pana 0.23.19
+      - run: dart run melos run pana --no-select
+
   build-example-android:
     name: Build example (Android)
     runs-on: ubuntu-latest
