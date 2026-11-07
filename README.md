@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/4rthurmonteiro/earshot_plugin/main/assets/brand/earshot_banner_dark.png">
+    <img src="https://raw.githubusercontent.com/4rthurmonteiro/earshot_plugin/main/assets/brand/earshot_banner_light.png" alt="earshot: on-device ambient listening for Flutter" width="640">
+  </picture>
+</p>
+
 # earshot
 
 [![ci](https://github.com/4rthurmonteiro/earshot_plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/4rthurmonteiro/earshot_plugin/actions/workflows/ci.yaml)
