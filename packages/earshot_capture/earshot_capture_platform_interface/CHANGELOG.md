@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - Add `CaptureException` and `CaptureErrorCode`.
 - Add `CaptureMultiplexer`, which shares one native capture session between `pcm()` subscriptions, for implementations.

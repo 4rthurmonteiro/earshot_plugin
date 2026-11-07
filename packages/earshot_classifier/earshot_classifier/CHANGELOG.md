@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - **BREAKING:** `EarshotClassifier.detections()` now classifies. It picks the backend from `ClassifierOptions.backend`, drops detections below `minConfidence` and applies `Smoothing`.
 - Add the `yamnet` backend: YAMNet float32 through LiteRT (`flutter_litert`) in a background isolate, on Android, iOS and macOS. The model is bundled as an asset (see `THIRD_PARTY_NOTICES.md`).

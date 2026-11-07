@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - `LevelMeter` now measures: it emits one `LevelReading` per non-empty `PcmChunk` at 16, 44.1 and 48 kHz.
 - A, C and Z frequency weighting per IEC 61672-1, within ±0.5 dB of the standard's design goals at ten frequencies from 31.5 Hz to 16 kHz (to 6.3 kHz at a 16 kHz sample rate, whose Nyquist frequency is 8 kHz).

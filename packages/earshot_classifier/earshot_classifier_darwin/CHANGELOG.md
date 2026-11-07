@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - Follow the new `EarshotClassifierPlatform` API (`isAvailable`, `detections(ClassifierConfig)`).
 - Implement the Apple SoundAnalysis backend on iOS 15+ and macOS 12+: `SNClassifySoundRequest` (version 1) on an `AVAudioEngine` input tap, through Pigeon. `auto` now picks it on iOS and macOS.

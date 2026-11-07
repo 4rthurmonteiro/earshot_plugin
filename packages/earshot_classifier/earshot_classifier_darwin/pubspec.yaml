@@ -1,6 +1,6 @@
 name: earshot_classifier_darwin
 description: "Pre-release: the iOS and macOS implementation of earshot_classifier, backed by Apple's on-device SoundAnalysis."
-version: 0.0.1
+version: 0.1.0
 repository: https://github.com/4rthurmonteiro/earshot_plugin/tree/main/packages/earshot_classifier/earshot_classifier_darwin
 issue_tracker: https://github.com/4rthurmonteiro/earshot_plugin/issues
 topics: [audio, sound-classification]
@@ -25,8 +25,8 @@ flutter:
         sharedDarwinSource: true
 
 dependencies:
-  earshot_capture_platform_interface: ^0.0.1
-  earshot_classifier_platform_interface: ^0.0.1
+  earshot_capture_platform_interface: ^0.1.0
+  earshot_classifier_platform_interface: ^0.1.0
   flutter:
     sdk: flutter
   # Imported by the Pigeon-generated lib/src/messages.g.dart.
