@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - SoundAnalysis now classifies PCM from `earshot_capture`, so classification and capture share one microphone tap (ADR 0018). The plugin no longer runs an `AVAudioEngine`, reads the microphone permission or touches the iOS audio session.
 - Add `classify(pcm, config)`, which accepts every sample rate. `detections(config)` classifies 16 kHz PCM from `earshot_capture`, so it fails with `sampleRateConflict` while capture runs at another rate.

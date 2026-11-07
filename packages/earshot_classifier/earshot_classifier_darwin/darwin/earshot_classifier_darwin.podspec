@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'earshot_classifier_darwin'
-  s.version          = '0.1.0'
+  s.version          = '0.2.0'
   s.summary          = 'iOS and macOS implementation of earshot_classifier.'
   s.description      = <<-DESC
 iOS and macOS implementation of earshot_classifier: on-device sound classification with SoundAnalysis.

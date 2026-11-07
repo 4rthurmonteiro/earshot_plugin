@@ -1,6 +1,6 @@
 name: earshot_classifier_platform_interface
 description: "Pre-release: the pure Dart platform interface for earshot_classifier, with the shared types for on-device sound classification."
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/4rthurmonteiro/earshot_plugin/tree/main/packages/earshot_classifier/earshot_classifier_platform_interface
 issue_tracker: https://github.com/4rthurmonteiro/earshot_plugin/issues
 topics: [audio, sound-classification, plugin-interface]

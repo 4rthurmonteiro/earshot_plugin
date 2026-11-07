@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - Add `EarshotClassifierPlatform.classify(Stream<PcmChunk>, ClassifierConfig)`, so native backends classify PCM from `earshot_capture` instead of opening their own microphone session (ADR 0018). It defaults to a stream that errors with `UnimplementedError`.
 - `detections` now captures with `earshot_capture` too, and detection timestamps follow the PCM clock.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - Document that capture is now the only user of the shared iOS audio session (ADR 0018). Behaviour is unchanged.
 
