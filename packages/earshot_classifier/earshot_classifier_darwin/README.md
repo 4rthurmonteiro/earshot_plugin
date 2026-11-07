@@ -13,10 +13,11 @@ Part of [earshot](https://github.com/4rthurmonteiro/earshot_plugin): on-device a
 
 ## How it works
 
-- Each `listen()` on `detections()` starts its own session, with its own `SNAudioStreamAnalyzer` and `SNClassifySoundRequest` (classifier version 1). Sessions that run at the same time share one `AVAudioEngine` input tap, and the microphone is released when the last one is cancelled.
+- SoundAnalysis classifies PCM captured by `earshot_capture`, so the app keeps one microphone session (ADR 0018). `classify(pcm)` classifies a stream you pass in, at any sample rate, and `detections()` captures 16 kHz PCM itself.
+- Each `listen()` starts its own session, with its own `SNAudioStreamAnalyzer` and `SNClassifySoundRequest` (classifier version 1). Every PCM chunk is copied to the host for analysis. Cancelling the subscription cancels the PCM subscription and stops the session.
 - Every label of an analysis window (about one second, overlapping by half) at or above the minimum confidence is reported. Labels are mapped to `EarshotSound` and `SoundGroup` in Dart, with `SoundVocabulary`.
-- `isAvailable()` never prompts, and neither does classification: request the microphone permission first, for example with `EarshotCapture.requestMicrophonePermission()`. Without it, the stream fails with `CaptureException(CaptureErrorCode.permissionDenied)`.
-- On iOS the audio session uses the `.record` category and the `.measurement` mode. Interruptions (calls, Siri, route and device changes) pause the detections, which resume on their own afterwards.
+- `isAvailable()` never prompts, and neither does classification: request the microphone permission first, for example with `EarshotCapture.requestMicrophonePermission()`. Capture errors, such as `CaptureException(CaptureErrorCode.permissionDenied)`, reach the stream unchanged.
+- Capture owns the audio session and the interruptions (calls, Siri, route and device changes). Detections pause with the PCM and resume on their own afterwards, with timestamps that jump over the gap.
 - No audio is written to disk or leaves the device.
 
 ## Minimum OS versions

@@ -1,6 +1,6 @@
 # 0015. SoundAnalysis sessions, errors and permission
 
-- Status: Accepted, amended by [0017](0017-shared-ios-audio-session.md)
+- Status: Accepted, amended by [0017](0017-shared-ios-audio-session.md), engine, permission and interruptions superseded by [0018](0018-soundanalysis-on-the-shared-capture-tap.md)
 - Date: 2026-11-04
 
 ## Context

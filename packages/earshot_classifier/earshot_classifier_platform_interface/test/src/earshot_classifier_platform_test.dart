@@ -1,3 +1,4 @@
+import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
 import 'package:earshot_classifier_platform_interface/earshot_classifier_platform_interface.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -65,12 +66,32 @@ void main() {
         emitsError(_notImplemented),
       );
     });
+
+    test('classify returns a stream that errors by default', () {
+      expect(
+        _ExtendingEarshotClassifierPlatform().classify(
+          const Stream<PcmChunk>.empty(),
+          const ClassifierConfig(),
+        ),
+        emitsError(_notImplemented),
+      );
+    });
   });
 
   group(UnsupportedEarshotClassifier, () {
     test('detections returns a stream that errors', () {
       expect(
         UnsupportedEarshotClassifier().detections(const ClassifierConfig()),
+        emitsError(_notImplemented),
+      );
+    });
+
+    test('classify returns a stream that errors', () {
+      expect(
+        UnsupportedEarshotClassifier().classify(
+          const Stream<PcmChunk>.empty(),
+          const ClassifierConfig(),
+        ),
         emitsError(_notImplemented),
       );
     });

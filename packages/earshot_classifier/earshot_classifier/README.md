@@ -30,14 +30,14 @@ final subscription = const EarshotClassifier(
 await subscription.cancel();
 ```
 
-To share one capture stream with other consumers, such as a level meter, classify PCM you already have with `classify(pcm)`. PCM at 44.1 or 48 kHz is resampled to 16 kHz.
+To share one capture stream with other consumers, such as a level meter, classify PCM you already have with `classify(pcm)`. It picks the backend the same way. SoundAnalysis accepts every capture rate, and YAMNet resamples 44.1 or 48 kHz PCM to 16 kHz.
 
 ## Backends
 
 | `ClassifierBackend` | Engine | Platforms |
 | --- | --- | --- |
 | `auto` (default) | `apple` on iOS and macOS when it is available, `yamnet` otherwise | all |
-| `apple` | Apple SoundAnalysis, with its own microphone session | iOS 15+, macOS 12+ |
+| `apple` | Apple SoundAnalysis, on PCM from `earshot_capture` | iOS 15+, macOS 12+ |
 | `yamnet` | YAMNet float32 with LiteRT, in a background isolate | Android, iOS, macOS |
 
 Confidence scores from different backends cannot be compared. Pick `yamnet` on every platform for consistent results.

@@ -1,12 +1,11 @@
-import AVFoundation
-
 #if os(iOS)
   import Flutter
 #elseif os(macOS)
   import FlutterMacOS
 #endif
 
-/// The iOS and macOS host side of earshot_classifier: Apple SoundAnalysis.
+/// The iOS and macOS host side of earshot_classifier: Apple SoundAnalysis on
+/// the PCM that earshot_capture delivers to Dart (ADR 0018).
 public class EarshotClassifierDarwinPlugin: NSObject, FlutterPlugin, EarshotClassifierHostApi {
   private let classifier = SoundClassifier()
   private let eventHandler = ClassifierEventsHandler()
@@ -42,26 +41,17 @@ public class EarshotClassifierDarwinPlugin: NSObject, FlutterPlugin, EarshotClas
   }
 
   func startSession(session: ClassifierSessionMessage) throws {
-    try classifier.start(
-      id: session.sessionId, minConfidence: session.minConfidence,
-      permission: Self.microphoneGranted())
+    try classifier.start(id: session.sessionId, minConfidence: session.minConfidence)
+  }
+
+  func analyze(pcm: ClassifierPcmMessage) throws {
+    classifier.analyze(
+      id: pcm.sessionId, sampleRate: pcm.sampleRate, timestampMicros: pcm.timestampMicros,
+      samples: pcm.samples.data)
   }
 
   func stopSession(sessionId: Int64) throws {
     classifier.stop(id: sessionId)
-  }
-
-  /// Reads the record permission without prompting the user. Classification
-  /// never prompts: apps request access with earshot_capture first.
-  private static func microphoneGranted() -> Bool {
-    #if os(iOS)
-      if #available(iOS 17.0, *) {
-        return AVAudioApplication.shared.recordPermission == .granted
-      }
-      return AVAudioSession.sharedInstance().recordPermission == .granted
-    #elseif os(macOS)
-      return AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
-    #endif
   }
 }
 

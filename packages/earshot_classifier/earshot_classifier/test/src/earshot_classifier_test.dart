@@ -25,7 +25,10 @@ SoundDetection _apple(int milliseconds, {double confidence = 0.9}) =>
     );
 
 void main() {
-  setUpAll(() => registerFallbackValue(const ClassifierConfig()));
+  setUpAll(() {
+    registerFallbackValue(const ClassifierConfig());
+    registerFallbackValue(const Stream<PcmChunk>.empty());
+  });
 
   group(EarshotClassifier, () {
     late _MockEarshotClassifierPlatform platform;
@@ -291,13 +294,66 @@ void main() {
         verifyNever(() => platform.detections(any()));
       });
 
-      test('errors for the apple backend', () async {
+      test('uses the platform on the given PCM for apple on iOS', () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        when(() => platform.classify(any(), any()))
+            .thenAnswer((_) => Stream.value(_apple(0)));
+
+        await expectLater(
+          const EarshotClassifier(
+            options: ClassifierOptions(
+              backend: ClassifierBackend.apple,
+              minConfidence: 0.7,
+              smoothing: Smoothing(hits: 1),
+            ),
+          ).classify(pcm.stream),
+          emitsInOrder([_apple(0), emitsDone]),
+        );
+        verify(
+          () => platform.classify(
+            pcm.stream,
+            const ClassifierConfig(minConfidence: 0.7),
+          ),
+        ).called(1);
+        verifyNever(platform.isAvailable);
+        verifyNever(() => platform.detections(any()));
+      });
+
+      test('errors for apple off Apple platforms', () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
         await expectLater(
           const EarshotClassifier(
             options: ClassifierOptions(backend: ClassifierBackend.apple),
           ).classify(pcm.stream),
           emitsInOrder([emitsError(isA<UnsupportedError>()), emitsDone]),
         );
+      });
+
+      test('uses the platform for auto on macOS when available', () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        when(platform.isAvailable).thenAnswer((_) async => true);
+        when(() => platform.classify(any(), any()))
+            .thenAnswer((_) => Stream.value(_apple(0)));
+
+        await expectLater(
+          const EarshotClassifier(
+            options: ClassifierOptions(smoothing: Smoothing(hits: 1)),
+          ).classify(pcm.stream),
+          emitsInOrder([_apple(0), emitsDone]),
+        );
+      });
+
+      test('uses YAMNet for auto when the platform is unavailable', () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        when(platform.isAvailable).thenAnswer((_) async => false);
+        final detections = <SoundDetection>[];
+        const EarshotClassifier(
+          options: ClassifierOptions(smoothing: Smoothing(hits: 1)),
+        ).classify(pcm.stream).listen(detections.add);
+        await feedWindows(1);
+
+        expect(detections.single.backend, ClassifierBackend.yamnet);
+        verifyNever(() => platform.classify(any(), any()));
       });
     });
   });

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document that capture is now the only user of the shared iOS audio session (ADR 0018). Behaviour is unchanged.
+
 ## 0.1.0
 
 - Microphone permission request: `AVAudioApplication` (iOS 17+) or `AVAudioSession` on iOS, `AVCaptureDevice` on macOS.

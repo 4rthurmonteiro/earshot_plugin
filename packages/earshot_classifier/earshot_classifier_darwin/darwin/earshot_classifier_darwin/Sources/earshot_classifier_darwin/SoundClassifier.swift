@@ -1,360 +1,206 @@
 import AVFoundation
 import SoundAnalysis
 
-#if os(iOS)
-  import UIKit
-#endif
-
-/// Classifies the microphone with SoundAnalysis for any number of sessions.
+/// Classifies PCM with SoundAnalysis for any number of sessions.
 ///
-/// The sessions share one `AVAudioEngine` input tap, because an input node
-/// has one tap per bus, and each session has its own `SNAudioStreamAnalyzer`
-/// and `SNClassifySoundRequest` (version 1). The engine starts with the first
-/// session and stops, releasing the microphone, with the last one.
+/// The PCM comes from earshot_capture, through Dart (ADR 0018): this class
+/// never opens the microphone, reads its permission or touches the audio
+/// session. Each session has its own `SNAudioStreamAnalyzer` and
+/// `SNClassifySoundRequest` (version 1), built for the sample rate of its
+/// first chunk. The analyzer is rebuilt when the rate changes or the
+/// timestamps jump, after an interruption, so that timestamps stay on the
+/// capture clock.
 ///
 /// Every method must be called on the main thread, and `onEvent` runs on the
 /// main thread. Analyzers run on a serial background queue.
-///
-/// Interruptions are handled as in earshot_capture (ADR 0013): the engine
-/// stops and restarts on its own afterwards, and every analyzer is rebuilt for
-/// the new input format. Timestamps are rebased on the time elapsed since each
-/// session started, so gaps show up as jumps. If every restart attempt fails,
-/// every session ends with an `audioUnavailable` error event.
 final class SoundClassifier {
   var onEvent: (ClassifierEventMessage) -> Void = { _ in }
 
-  private var engine = AVAudioEngine()
-  private var tapInstalled = false
-  private var sessions: [Int64: Session] = [:]
-  private var running = false
-  /// Whether this classifier counts as a user of the shared audio session.
-  private var holdsAudioSession = false
-  private var retries = 0
-  /// Incremented on every engine (re)start and stop, to drop stale results
-  /// and retries.
-  private var generation = 0
-  private var observers: [NSObjectProtocol] = []
-  private var engineObserver: NSObjectProtocol?
-  private let analysis = AnalysisQueue()
-
-  private static let maxRetries = 10
-  private static let retryDelay: TimeInterval = 0.5
-  private static let tapBufferSize: AVAudioFrameCount = 8192
+  /// The minimum confidence of each running session.
+  private var sessions: [Int64: Double] = [:]
+  private lazy var analysis = AnalysisQueue(
+    onResult: { [weak self] id, timestampMicros, classifications in
+      guard let self, self.sessions[id] != nil else { return }
+      self.onEvent(
+        ClassifierEventMessage(
+          sessionId: id, timestampMicros: timestampMicros, classifications: classifications))
+    },
+    onFailure: { [weak self] id, message in
+      guard let self, self.sessions[id] != nil else { return }
+      self.onEvent(
+        ClassifierEventMessage(
+          sessionId: id, timestampMicros: 0, classifications: [], errorCode: "unknown",
+          errorMessage: message))
+      self.stop(id: id)
+    })
 
   /// Whether SoundAnalysis can classify on this OS. Never prompts the user.
   static func isAvailable() -> Bool {
     (try? SNClassifySoundRequest(classifierIdentifier: .version1)) != nil
   }
 
-  /// Starts classifying for session `id`.
-  func start(id: Int64, minConfidence: Double, permission: Bool) throws {
-    guard permission else {
+  /// Starts session `id`. It analyzes the PCM passed to `analyze`.
+  func start(id: Int64, minConfidence: Double) throws {
+    guard Self.isAvailable() else {
       throw PigeonError(
-        code: "permissionDenied", message: "Microphone access has not been granted.", details: nil)
+        code: "unknown", message: "SoundAnalysis cannot classify on this OS.", details: nil)
     }
     stop(id: id)
-    let session = Session(
-      id: id, minConfidence: minConfidence, startUptime: ProcessInfo.processInfo.systemUptime)
-    sessions[id] = session
+    sessions[id] = minConfidence
+  }
 
-    if sessions.count == 1 {
-      do {
-        #if os(iOS)
-          try EarshotAudioSession.acquire()
-          holdsAudioSession = true
-        #endif
-        retries = 0
-        try startEngine()
-      } catch {
-        sessions[id] = nil
-        stopAll()
-        throw Self.pigeonError(error, opening: true)
-      }
-      addObservers()
-    } else if running {
-      // Join the running engine: the analyzer starts at frame zero.
-      do {
-        try attach(session, format: engine.inputNode.outputFormat(forBus: 0), baseMicros: 0)
-      } catch {
-        sessions[id] = nil
-        throw Self.pigeonError(error, opening: false)
-      }
-    }
-    // Otherwise the engine is interrupted, and the restart attaches it.
+  /// Queues `samples`, little-endian float32 mono at `sampleRate`, for the
+  /// analyzer of session `id`. Does nothing if the session is not running.
+  func analyze(id: Int64, sampleRate: Int64, timestampMicros: Int64, samples: Data) {
+    guard let minConfidence = sessions[id], sampleRate > 0,
+      samples.count >= MemoryLayout<Float>.size
+    else { return }
+    analysis.analyze(
+      id: id, minConfidence: minConfidence, sampleRate: Double(sampleRate),
+      timestampMicros: timestampMicros, samples: samples)
   }
 
   /// Stops session `id`. Safe to call when it is not running.
   func stop(id: Int64) {
     guard sessions.removeValue(forKey: id) != nil else { return }
     analysis.remove(id: id)
-    if sessions.isEmpty { stopAll() }
   }
 
-  /// Stops every session and releases the microphone.
+  /// Stops every session.
   func stopAll() {
-    generation += 1
-    sessions.removeAll()
-    removeObservers()
-    stopEngine()
-    #if os(iOS)
-      // Other earshot engines in the app may still use the session.
-      if holdsAudioSession {
-        holdsAudioSession = false
-        EarshotAudioSession.release()
-      }
-    #endif
-  }
-
-  // MARK: - Engine
-
-  private func startEngine() throws {
-    generation += 1
-    let input = engine.inputNode
-    let format = input.outputFormat(forBus: 0)
-    guard format.sampleRate > 0, format.channelCount > 0 else {
-      throw PigeonError(
-        code: "audioUnavailable", message: "No microphone input is available.", details: nil)
-    }
-    let now = ProcessInfo.processInfo.systemUptime
-    for session in sessions.values {
-      try attach(session, format: format, baseMicros: Int64((now - session.startUptime) * 1_000_000))
-    }
-    let analysis = self.analysis
-    input.installTap(onBus: 0, bufferSize: Self.tapBufferSize, format: format) { buffer, _ in
-      analysis.analyze(buffer)
-    }
-    tapInstalled = true
-    engine.prepare()
-    do {
-      try engine.start()
-    } catch {
-      stopEngine()
-      throw error
-    }
-    running = true
-  }
-
-  private func stopEngine() {
-    running = false
-    engine.stop()
-    if tapInstalled {
-      engine.inputNode.removeTap(onBus: 0)
-      tapInstalled = false
-    }
-    analysis.removeAll()
-  }
-
-  /// Gives `session` a new analyzer for `format`.
-  private func attach(_ session: Session, format: AVAudioFormat, baseMicros: Int64) throws {
-    let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
-    let analyzer = SNAudioStreamAnalyzer(format: format)
-    let generation = self.generation
-    let observer = ResultsObserver(
-      minConfidence: session.minConfidence, baseMicros: baseMicros,
-      onResult: { [weak self] timestampMicros, classifications in
-        guard let self, self.generation == generation, self.sessions[session.id] != nil else {
-          return
-        }
-        self.onEvent(
-          ClassifierEventMessage(
-            sessionId: session.id, timestampMicros: timestampMicros,
-            classifications: classifications))
-      },
-      onFailure: { [weak self] message in
-        guard let self, self.generation == generation, self.sessions[session.id] != nil else {
-          return
-        }
-        self.fail(id: session.id, code: "unknown", message: message)
-      })
-    try analyzer.add(request, withObserver: observer)
-    analysis.set(id: session.id, analyzer: analyzer, observer: observer)
-  }
-
-  private func fail(id: Int64, code: String, message: String) {
-    onEvent(
-      ClassifierEventMessage(
-        sessionId: id, timestampMicros: 0, classifications: [], errorCode: code,
-        errorMessage: message))
-    stop(id: id)
-  }
-
-  // MARK: - Interruptions
-
-  /// Stops the engine and restarts it unless the system still holds the
-  /// microphone.
-  private func interrupt(restart: Bool) {
-    guard !sessions.isEmpty else { return }
-    generation += 1
-    stopEngine()
-    if restart { self.restart() }
-  }
-
-  private func restart() {
-    guard !sessions.isEmpty, !running else { return }
-    do {
-      #if os(iOS)
-        try AVAudioSession.sharedInstance().setActive(true)
-      #endif
-      stopEngine()
-      try startEngine()
-      retries = 0
-    } catch {
-      stopEngine()
-      retries += 1
-      if retries > Self.maxRetries {
-        let message =
-          "The microphone was interrupted and could not be reopened: \(error.localizedDescription)"
-        for id in sessions.keys { fail(id: id, code: "audioUnavailable", message: message) }
-        return
-      }
-      let retryGeneration = generation
-      DispatchQueue.main.asyncAfter(deadline: .now() + Self.retryDelay) { [weak self] in
-        guard let self, self.generation == retryGeneration else { return }
-        self.restart()
-      }
-    }
-  }
-
-  private func addObservers() {
-    let center = NotificationCenter.default
-    #if os(iOS)
-      let audioSession = AVAudioSession.sharedInstance()
-      observers.append(
-        center.addObserver(
-          forName: AVAudioSession.interruptionNotification, object: audioSession, queue: .main
-        ) { [weak self] note in
-          guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-            let type = AVAudioSession.InterruptionType(rawValue: raw)
-          else { return }
-          switch type {
-          case .began:
-            // The system holds the microphone until the interruption ends.
-            self?.interrupt(restart: false)
-          case .ended:
-            // shouldResume is advice for playback; a recorder always tries.
-            self?.restart()
-          @unknown default:
-            break
-          }
-        })
-      observers.append(
-        center.addObserver(
-          forName: AVAudioSession.mediaServicesWereResetNotification, object: audioSession,
-          queue: .main
-        ) { [weak self] _ in
-          guard let self, !self.sessions.isEmpty else { return }
-          // Every audio object is invalid after a reset: rebuild the engine.
-          self.generation += 1
-          self.replaceEngine()
-          try? audioSession.setCategory(.record, mode: .measurement, options: [])
-          self.restart()
-        })
-      observers.append(
-        center.addObserver(
-          forName: AVAudioSession.routeChangeNotification, object: audioSession, queue: .main
-        ) { [weak self] _ in
-          // Usually followed by a configuration change; this covers routes
-          // that stop the engine without one.
-          guard let self, self.running, !self.engine.isRunning else { return }
-          self.interrupt(restart: true)
-        })
-      observers.append(
-        center.addObserver(
-          forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-          // Some interruptions (Siri, a declined call) end without an
-          // .ended notification.
-          self?.restart()
-        })
-    #endif
-    observeEngineConfiguration()
-  }
-
-  private func observeEngineConfiguration() {
-    if let engineObserver { NotificationCenter.default.removeObserver(engineObserver) }
-    engineObserver = NotificationCenter.default.addObserver(
-      forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
-    ) { [weak self] _ in
-      // The engine stopped and the input format may have changed (a new
-      // device, sample rate or channel count): rebuild the tap and analyzers.
-      self?.interrupt(restart: true)
-    }
-  }
-
-  private func replaceEngine() {
-    stopEngine()
-    engine = AVAudioEngine()
-    observeEngineConfiguration()
-  }
-
-  private func removeObservers() {
-    observers.forEach(NotificationCenter.default.removeObserver)
-    observers.removeAll()
-    if let engineObserver { NotificationCenter.default.removeObserver(engineObserver) }
-    engineObserver = nil
-  }
-
-  private static func pigeonError(_ error: Error, opening: Bool) -> PigeonError {
-    if let error = error as? PigeonError { return error }
-    return PigeonError(
-      code: opening ? "audioUnavailable" : "unknown",
-      message: "SoundAnalysis could not start: \(error.localizedDescription)", details: nil)
+    for id in sessions.keys { stop(id: id) }
   }
 }
 
-/// A classification session started by Dart.
-private struct Session {
-  let id: Int64
-  let minConfidence: Double
-  let startUptime: TimeInterval
-}
-
-/// Owns the analyzers and feeds them the tap's buffers, on a serial queue.
+/// Owns the analyzers and feeds them PCM, on a serial queue.
 private final class AnalysisQueue {
+  /// Timestamps that differ by more than this from the end of the previous
+  /// chunk start a new analyzer. Contiguous chunks differ by under 1 µs.
+  private static let maxDriftMicros: Double = 1000
+
   private let queue = DispatchQueue(label: "earshot_classifier_darwin.analysis")
+  private let onResult: (Int64, Int64, [ClassificationMessage]) -> Void
+  private let onFailure: (Int64, String) -> Void
   /// Only touched on `queue`.
   private var targets: [Int64: Target] = [:]
 
   private final class Target {
     let analyzer: SNAudioStreamAnalyzer
+    let format: AVAudioFormat
     /// Kept alive here, whether or not the analyzer retains it.
     let observer: ResultsObserver
+    /// The timestamp of the analyzer's first frame.
+    let baseMicros: Int64
     var framePosition: AVAudioFramePosition = 0
 
-    init(analyzer: SNAudioStreamAnalyzer, observer: ResultsObserver) {
+    init(
+      analyzer: SNAudioStreamAnalyzer, format: AVAudioFormat, observer: ResultsObserver,
+      baseMicros: Int64
+    ) {
       self.analyzer = analyzer
+      self.format = format
       self.observer = observer
+      self.baseMicros = baseMicros
+    }
+
+    /// The timestamp the next contiguous chunk starts at.
+    var nextMicros: Double {
+      Double(baseMicros) + Double(framePosition) * 1_000_000 / format.sampleRate
     }
   }
 
-  func set(id: Int64, analyzer: SNAudioStreamAnalyzer, observer: ResultsObserver) {
-    queue.async { self.targets[id] = Target(analyzer: analyzer, observer: observer) }
+  /// `onResult` and `onFailure` are called on the main thread.
+  init(
+    onResult: @escaping (Int64, Int64, [ClassificationMessage]) -> Void,
+    onFailure: @escaping (Int64, String) -> Void
+  ) {
+    self.onResult = onResult
+    self.onFailure = onFailure
+  }
+
+  func analyze(
+    id: Int64, minConfidence: Double, sampleRate: Double, timestampMicros: Int64,
+    samples: Data
+  ) {
+    queue.async {
+      var existing = self.targets[id]
+      if let current = existing,
+        current.format.sampleRate != sampleRate
+          || abs(Double(timestampMicros) - current.nextMicros) > Self.maxDriftMicros
+      {
+        // Flush the last partial window before the gap or rate change.
+        current.analyzer.completeAnalysis()
+        existing = nil
+      }
+      let target: Target
+      if let existing {
+        target = existing
+      } else {
+        do {
+          target = try self.makeTarget(
+            id: id, minConfidence: minConfidence, sampleRate: sampleRate,
+            baseMicros: timestampMicros)
+        } catch {
+          self.targets[id] = nil
+          let message = "SoundAnalysis could not start: \(error.localizedDescription)"
+          DispatchQueue.main.async { self.onFailure(id, message) }
+          return
+        }
+        self.targets[id] = target
+      }
+      guard let buffer = Self.buffer(samples, format: target.format) else { return }
+      target.analyzer.analyze(buffer, atAudioFramePosition: target.framePosition)
+      target.framePosition += AVAudioFramePosition(buffer.frameLength)
+    }
   }
 
   func remove(id: Int64) {
     queue.async { self.targets.removeValue(forKey: id)?.analyzer.removeAllRequests() }
   }
 
-  func removeAll() {
-    queue.async {
-      self.targets.values.forEach { $0.analyzer.removeAllRequests() }
-      self.targets.removeAll()
+  private func makeTarget(
+    id: Int64, minConfidence: Double, sampleRate: Double, baseMicros: Int64
+  ) throws -> Target {
+    guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else {
+      throw PigeonError(
+        code: "unknown", message: "Unsupported sample rate \(sampleRate) Hz.", details: nil)
     }
+    let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
+    let analyzer = SNAudioStreamAnalyzer(format: format)
+    let onResult = self.onResult
+    let onFailure = self.onFailure
+    let observer = ResultsObserver(
+      minConfidence: minConfidence, baseMicros: baseMicros,
+      onResult: { timestampMicros, classifications in
+        DispatchQueue.main.async { onResult(id, timestampMicros, classifications) }
+      },
+      onFailure: { message in
+        DispatchQueue.main.async { onFailure(id, message) }
+      })
+    try analyzer.add(request, withObserver: observer)
+    return Target(analyzer: analyzer, format: format, observer: observer, baseMicros: baseMicros)
   }
 
-  /// Called on the audio thread.
-  func analyze(_ buffer: AVAudioPCMBuffer) {
-    queue.async {
-      for target in self.targets.values {
-        target.analyzer.analyze(buffer, atAudioFramePosition: target.framePosition)
-        target.framePosition += AVAudioFramePosition(buffer.frameLength)
-      }
+  /// Copies little-endian float32 `samples` into a buffer of `format`. Every
+  /// Apple platform is little-endian, so the bytes are copied as they are.
+  private static func buffer(_ samples: Data, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+    let frames = samples.count / MemoryLayout<Float>.size
+    guard frames > 0,
+      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)),
+      let channel = buffer.floatChannelData?[0]
+    else { return nil }
+    buffer.frameLength = AVAudioFrameCount(frames)
+    samples.withUnsafeBytes { bytes in
+      // The bytes may be unaligned, so copy them rather than rebinding them.
+      UnsafeMutableRawPointer(channel).copyMemory(
+        from: bytes.baseAddress!, byteCount: frames * MemoryLayout<Float>.size)
     }
+    return buffer
   }
 }
 
 /// Receives SoundAnalysis results on the analysis queue and forwards the
-/// classifications at or above `minConfidence` to the main thread.
+/// classifications at or above `minConfidence`.
 private final class ResultsObserver: NSObject, SNResultsObserving {
   private let minConfidence: Double
   private let baseMicros: Int64
@@ -379,12 +225,10 @@ private final class ResultsObserver: NSObject, SNResultsObserving {
       .map { ClassificationMessage(identifier: $0.identifier, confidence: $0.confidence) }
     guard !classifications.isEmpty else { return }
     let start = result.timeRange.start.seconds
-    let timestampMicros = baseMicros + Int64((start.isFinite ? start : 0) * 1_000_000)
-    DispatchQueue.main.async { self.onResult(timestampMicros, classifications) }
+    onResult(baseMicros + Int64((start.isFinite ? start : 0) * 1_000_000), classifications)
   }
 
   func request(_ request: SNRequest, didFailWithError error: Error) {
-    let message = "SoundAnalysis failed: \(error.localizedDescription)"
-    DispatchQueue.main.async { self.onFailure(message) }
+    onFailure("SoundAnalysis failed: \(error.localizedDescription)")
   }
 }

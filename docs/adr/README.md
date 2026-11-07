@@ -18,9 +18,10 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0012](0012-weighting-filter-design-and-level-reference.md) | Weighting filter design and level reference | Accepted |
 | [0013](0013-capture-session-sharing-and-interruptions.md) | Capture session sharing, errors and interruptions | Accepted |
 | [0014](0014-classifier-platform-interface-and-model-bundling.md) | Classifier platform interface, vocabulary data and model bundling | Accepted |
-| [0015](0015-soundanalysis-sessions-and-errors.md) | SoundAnalysis sessions, errors and permission | Accepted, amended by 0017 |
-| [0016](0016-umbrella-stream-composition-and-error-codes.md) | Umbrella stream composition and error codes | Accepted |
-| [0017](0017-shared-ios-audio-session.md) | Shared iOS audio session across the earshot plugins | Accepted |
+| [0015](0015-soundanalysis-sessions-and-errors.md) | SoundAnalysis sessions, errors and permission | Accepted, amended by 0017, partly superseded by 0018 |
+| [0016](0016-umbrella-stream-composition-and-error-codes.md) | Umbrella stream composition and error codes | Accepted, amended by 0018 |
+| [0017](0017-shared-ios-audio-session.md) | Shared iOS audio session across the earshot plugins | Accepted, amended by 0018 |
+| [0018](0018-soundanalysis-on-the-shared-capture-tap.md) | SoundAnalysis on the shared capture tap | Accepted |
 
 ## Template
 

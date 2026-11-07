@@ -20,6 +20,30 @@ class ClassifierSessionMessage {
   double minConfidence;
 }
 
+/// One chunk of PCM for a session to analyze.
+class ClassifierPcmMessage {
+  new({
+    required this.sessionId,
+    required this.sampleRate,
+    required this.timestampMicros,
+    required this.samples,
+  });
+
+  /// The session that analyzes this chunk.
+  int sessionId;
+
+  /// The rate of [samples], in hertz.
+  int sampleRate;
+
+  /// The time of the first sample since capture started, in microseconds.
+  /// A jump from the end of the previous chunk marks an interruption.
+  int timestampMicros;
+
+  /// Mono float32 samples, as little-endian bytes. Pigeon has no
+  /// `Float32List`.
+  Uint8List samples;
+}
+
 /// One label scored by SoundAnalysis.
 class ClassificationMessage {
   new({required this.identifier, required this.confidence});
@@ -45,8 +69,8 @@ class ClassifierEventMessage {
   /// The session this event belongs to.
   int sessionId;
 
-  /// The start of the analysis window since the session started, in
-  /// microseconds.
+  /// The start of the analysis window, on the clock of the PCM timestamps,
+  /// in microseconds.
   int timestampMicros;
 
   /// The classifications at or above the session's minimum confidence.
@@ -66,9 +90,13 @@ abstract class EarshotClassifierHostApi {
   /// Whether SoundAnalysis can run on this OS. Never prompts the user.
   bool isAvailable();
 
-  /// Starts classifying the microphone for [session]. Events arrive on
-  /// `classifierEvents`.
+  /// Starts the session [session]. It classifies the PCM sent with
+  /// [analyze], and its events arrive on `classifierEvents`.
   void startSession(ClassifierSessionMessage session);
+
+  /// Queues [pcm] for its session's analyzer. Does nothing if the session is
+  /// not running.
+  void analyze(ClassifierPcmMessage pcm);
 
   /// Stops the session [sessionId]. Does nothing if it is not running.
   void stopSession(int sessionId);

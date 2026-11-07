@@ -151,6 +151,72 @@ class ClassifierSessionMessage {
   }
 }
 
+/// One chunk of PCM for a session to analyze.
+class ClassifierPcmMessage {
+  ClassifierPcmMessage({
+    required this.sessionId,
+    required this.sampleRate,
+    required this.timestampMicros,
+    required this.samples,
+  });
+
+  /// The session that analyzes this chunk.
+  int sessionId;
+
+  /// The rate of [samples], in hertz.
+  int sampleRate;
+
+  /// The time of the first sample since capture started, in microseconds.
+  /// A jump from the end of the previous chunk marks an interruption.
+  int timestampMicros;
+
+  /// Mono float32 samples, as little-endian bytes. Pigeon has no
+  /// `Float32List`.
+  Uint8List samples;
+
+  List<Object?> _toList() {
+    return <Object?>[sessionId, sampleRate, timestampMicros, samples];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static ClassifierPcmMessage decode(Object result) {
+    result as List<Object?>;
+    return ClassifierPcmMessage(
+      sessionId: result[0]! as int,
+      sampleRate: result[1]! as int,
+      timestampMicros: result[2]! as int,
+      samples: result[3]! as Uint8List,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! ClassifierPcmMessage || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(sessionId, other.sessionId) &&
+        _deepEquals(sampleRate, other.sampleRate) &&
+        _deepEquals(timestampMicros, other.timestampMicros) &&
+        _deepEquals(samples, other.samples);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'ClassifierPcmMessage(sessionId: $sessionId, sampleRate: $sampleRate, timestampMicros: $timestampMicros, samples: $samples)';
+  }
+}
+
 /// One label scored by SoundAnalysis.
 class ClassificationMessage {
   ClassificationMessage({required this.identifier, required this.confidence});
@@ -214,8 +280,8 @@ class ClassifierEventMessage {
   /// The session this event belongs to.
   int sessionId;
 
-  /// The start of the analysis window since the session started, in
-  /// microseconds.
+  /// The start of the analysis window, on the clock of the PCM timestamps,
+  /// in microseconds.
   int timestampMicros;
 
   /// The classifications at or above the session's minimum confidence.
@@ -290,11 +356,14 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is ClassifierSessionMessage) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    } else if (value is ClassificationMessage) {
+    } else if (value is ClassifierPcmMessage) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    } else if (value is ClassifierEventMessage) {
+    } else if (value is ClassificationMessage) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    } else if (value is ClassifierEventMessage) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -307,8 +376,10 @@ class _PigeonCodec extends StandardMessageCodec {
       case 129:
         return ClassifierSessionMessage.decode(readValue(buffer)!);
       case 130:
-        return ClassificationMessage.decode(readValue(buffer)!);
+        return ClassifierPcmMessage.decode(readValue(buffer)!);
       case 131:
+        return ClassificationMessage.decode(readValue(buffer)!);
+      case 132:
         return ClassifierEventMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -358,8 +429,8 @@ class EarshotClassifierHostApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  /// Starts classifying the microphone for [session]. Events arrive on
-  /// `classifierEvents`.
+  /// Starts the session [session]. It classifies the PCM sent with
+  /// [analyze], and its events arrive on `classifierEvents`.
   Future<void> startSession(ClassifierSessionMessage session) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.earshot_classifier_darwin.EarshotClassifierHostApi.startSession$pigeonVar_messageChannelSuffix';
@@ -370,6 +441,28 @@ class EarshotClassifierHostApi {
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
       <Object?>[session],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// Queues [pcm] for its session's analyzer. Does nothing if the session is
+  /// not running.
+  Future<void> analyze(ClassifierPcmMessage pcm) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.earshot_classifier_darwin.EarshotClassifierHostApi.analyze$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[pcm],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

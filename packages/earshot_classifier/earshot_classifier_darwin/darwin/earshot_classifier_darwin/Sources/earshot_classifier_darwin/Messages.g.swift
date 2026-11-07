@@ -229,6 +229,64 @@ struct ClassifierSessionMessage: Hashable, CustomStringConvertible {
   }
 }
 
+/// One chunk of PCM for a session to analyze.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct ClassifierPcmMessage: Hashable, CustomStringConvertible {
+  /// The session that analyzes this chunk.
+  var sessionId: Int64
+  /// The rate of [samples], in hertz.
+  var sampleRate: Int64
+  /// The time of the first sample since capture started, in microseconds.
+  /// A jump from the end of the previous chunk marks an interruption.
+  var timestampMicros: Int64
+  /// Mono float32 samples, as little-endian bytes. Pigeon has no
+  /// `Float32List`.
+  var samples: FlutterStandardTypedData
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> ClassifierPcmMessage? {
+    let sessionId = pigeonVar_list[0] as! Int64
+    let sampleRate = pigeonVar_list[1] as! Int64
+    let timestampMicros = pigeonVar_list[2] as! Int64
+    let samples = pigeonVar_list[3] as! FlutterStandardTypedData
+
+    return ClassifierPcmMessage(
+      sessionId: sessionId,
+      sampleRate: sampleRate,
+      timestampMicros: timestampMicros,
+      samples: samples
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      sessionId,
+      sampleRate,
+      timestampMicros,
+      samples,
+    ]
+  }
+  static func == (lhs: ClassifierPcmMessage, rhs: ClassifierPcmMessage) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.sessionId, rhs.sessionId) && MessagesPigeonInternal.deepEquals(lhs.sampleRate, rhs.sampleRate) && MessagesPigeonInternal.deepEquals(lhs.timestampMicros, rhs.timestampMicros) && MessagesPigeonInternal.deepEquals(lhs.samples, rhs.samples)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("ClassifierPcmMessage")
+    MessagesPigeonInternal.deepHash(value: sessionId, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: sampleRate, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: timestampMicros, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: samples, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "ClassifierPcmMessage(sessionId: \(String(describing: sessionId)), sampleRate: \(String(describing: sampleRate)), timestampMicros: \(String(describing: timestampMicros)), samples: \(String(describing: samples)))"
+  }
+}
+
 /// One label scored by SoundAnalysis.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
@@ -280,8 +338,8 @@ struct ClassificationMessage: Hashable, CustomStringConvertible {
 struct ClassifierEventMessage: Hashable, CustomStringConvertible {
   /// The session this event belongs to.
   var sessionId: Int64
-  /// The start of the analysis window since the session started, in
-  /// microseconds.
+  /// The start of the analysis window, on the clock of the PCM timestamps,
+  /// in microseconds.
   var timestampMicros: Int64
   /// The classifications at or above the session's minimum confidence.
   var classifications: [ClassificationMessage]
@@ -344,8 +402,10 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
     case 129:
       return ClassifierSessionMessage.fromList(self.readValue() as! [Any?])
     case 130:
-      return ClassificationMessage.fromList(self.readValue() as! [Any?])
+      return ClassifierPcmMessage.fromList(self.readValue() as! [Any?])
     case 131:
+      return ClassificationMessage.fromList(self.readValue() as! [Any?])
+    case 132:
       return ClassifierEventMessage.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -358,11 +418,14 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? ClassifierSessionMessage {
       super.writeByte(129)
       super.writeValue(value.toList())
-    } else if let value = value as? ClassificationMessage {
+    } else if let value = value as? ClassifierPcmMessage {
       super.writeByte(130)
       super.writeValue(value.toList())
-    } else if let value = value as? ClassifierEventMessage {
+    } else if let value = value as? ClassificationMessage {
       super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? ClassifierEventMessage {
+      super.writeByte(132)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -392,9 +455,12 @@ var messagesPigeonMethodCodec = FlutterStandardMethodCodec(readerWriter: Message
 protocol EarshotClassifierHostApi {
   /// Whether SoundAnalysis can run on this OS. Never prompts the user.
   func isAvailable() throws -> Bool
-  /// Starts classifying the microphone for [session]. Events arrive on
-  /// `classifierEvents`.
+  /// Starts the session [session]. It classifies the PCM sent with
+  /// [analyze], and its events arrive on `classifierEvents`.
   func startSession(session: ClassifierSessionMessage) throws
+  /// Queues [pcm] for its session's analyzer. Does nothing if the session is
+  /// not running.
+  func analyze(pcm: ClassifierPcmMessage) throws
   /// Stops the session [sessionId]. Does nothing if it is not running.
   func stopSession(sessionId: Int64) throws
 }
@@ -419,8 +485,8 @@ class EarshotClassifierHostApiSetup {
     } else {
       isAvailableChannel.setMessageHandler(nil)
     }
-    /// Starts classifying the microphone for [session]. Events arrive on
-    /// `classifierEvents`.
+    /// Starts the session [session]. It classifies the PCM sent with
+    /// [analyze], and its events arrive on `classifierEvents`.
     let startSessionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_classifier_darwin.EarshotClassifierHostApi.startSession\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       startSessionChannel.setMessageHandler { message, reply in
@@ -435,6 +501,23 @@ class EarshotClassifierHostApiSetup {
       }
     } else {
       startSessionChannel.setMessageHandler(nil)
+    }
+    /// Queues [pcm] for its session's analyzer. Does nothing if the session is
+    /// not running.
+    let analyzeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_classifier_darwin.EarshotClassifierHostApi.analyze\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      analyzeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pcmArg = args[0] as! ClassifierPcmMessage
+        do {
+          try api.analyze(pcm: pcmArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      analyzeChannel.setMessageHandler(nil)
     }
     /// Stops the session [sessionId]. Does nothing if it is not running.
     let stopSessionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.earshot_classifier_darwin.EarshotClassifierHostApi.stopSession\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
