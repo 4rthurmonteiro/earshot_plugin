@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `EarshotClassifierPlatform.classify(Stream<PcmChunk>, ClassifierConfig)`, so native backends classify PCM from `earshot_capture` instead of opening their own microphone session (ADR 0018). It defaults to a stream that errors with `UnimplementedError`.
+- `detections` now captures with `earshot_capture` too, and detection timestamps follow the PCM clock.
+- Depend on `earshot_capture_platform_interface` for `PcmChunk`.
+
 ## 0.1.0
 
 - Add `EarshotSound`, the cross-backend sound vocabulary. Each sound lists the Apple and YAMNet labels it maps to, validated against the official label lists.

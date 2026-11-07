@@ -8,7 +8,6 @@ import 'package:earshot_plugin/src/earshot_errors.dart';
 import 'package:earshot_plugin/src/earshot_event.dart';
 import 'package:earshot_plugin/src/earshot_exception.dart';
 import 'package:earshot_plugin/src/earshot_options.dart';
-import 'package:flutter/foundation.dart';
 
 /// {@template earshot}
 /// Listens to the microphone and reports how loud it is and what is
@@ -34,21 +33,17 @@ class Earshot {
   /// ## Microphone sessions
   ///
   /// Capture runs at [EarshotOptions.capture], 16 kHz by default. One
-  /// capture subscription feeds the [LevelMeter] and, when it classifies
-  /// PCM, the [EarshotClassifier]. Which path the classifier takes follows
-  /// [ClassifierOptions.backend]:
+  /// capture subscription feeds the [LevelMeter] and the
+  /// [EarshotClassifier], through [EarshotClassifier.classify], so every
+  /// backend shares one microphone session:
   ///
-  /// - [ClassifierBackend.yamnet], and [ClassifierBackend.auto] on Android,
-  ///   classify the shared capture stream with
-  ///   [EarshotClassifier.classify]. PCM at 44.1 or 48 kHz is resampled to
-  ///   the 16 kHz YAMNet expects.
+  /// - [ClassifierBackend.yamnet], and [ClassifierBackend.auto] on Android
+  ///   or when SoundAnalysis is unavailable, run YAMNet. PCM at 44.1 or
+  ///   48 kHz is resampled to the 16 kHz YAMNet expects.
   /// - [ClassifierBackend.apple], and [ClassifierBackend.auto] on iOS and
-  ///   macOS, use [EarshotClassifier.detections]. In 0.1.0 Apple
-  ///   SoundAnalysis runs its own microphone session next to capture. When
-  ///   `auto` finds SoundAnalysis unavailable, the classifier falls back to
-  ///   YAMNet on its own 16 kHz capture subscription, which joins the same
-  ///   microphone session; with a capture rate other than 16 kHz it then
-  ///   fails with [EarshotErrorCode.sampleRateConflict].
+  ///   macOS, run Apple SoundAnalysis on the PCM at the capture rate.
+  ///
+  /// Level readings and detections share the capture clock.
   ///
   /// With both [EarshotOptions.level] and [EarshotOptions.classifier] set to
   /// `null`, the stream opens nothing and closes at once.
@@ -100,47 +95,28 @@ class _Session {
       );
     }
     if (classifierOptions != null) {
-      final classifier = earshotClassifierFactory(classifierOptions);
       _listenTo(
-        _classifiesSharedPcm(classifierOptions.backend)
-            ? classifier.classify(_sharedPcm())
-            : classifier.detections(),
+        earshotClassifierFactory(classifierOptions).classify(_sharedPcm()),
         _onDetection,
         fromClassifier: true,
       );
     }
-    if (_pcmOutputs.isNotEmpty) {
-      _subscriptions.add(
-        earshotCapture
-            .pcm(config: _options.capture)
-            .listen(
-              _onPcm,
-              onError: (Object error, StackTrace stackTrace) =>
-                  _fail(error, stackTrace, fromClassifier: false),
-              onDone: _closePcmOutputs,
-            ),
-      );
-    }
+    _subscriptions.add(
+      earshotCapture
+          .pcm(config: _options.capture)
+          .listen(
+            _onPcm,
+            onError: (Object error, StackTrace stackTrace) =>
+                _fail(error, stackTrace, fromClassifier: false),
+            onDone: _closePcmOutputs,
+          ),
+    );
 
     _controller
       ..onPause = _pause
       ..onResume = _resume
       ..onCancel = _cancel;
   }
-
-  /// Whether the classifier reads the shared capture stream, rather than
-  /// opening its own session.
-  static bool _classifiesSharedPcm(ClassifierBackend backend) =>
-      switch (backend) {
-        ClassifierBackend.yamnet => true,
-        ClassifierBackend.apple => false,
-        ClassifierBackend.auto => !_isApplePlatform,
-      };
-
-  static bool get _isApplePlatform =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.macOS);
 
   /// Returns a new stream fed with every chunk of the one capture
   /// subscription.

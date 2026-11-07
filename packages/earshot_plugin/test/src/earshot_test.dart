@@ -181,23 +181,35 @@ void main() {
       await subscription.cancel();
     });
 
-    test('uses detections for the apple backend', () async {
-      final events = <EarshotEvent>[];
-      final subscription = const Earshot()
-          .listen(options: options(backend: ClassifierBackend.apple))
-          .listen(events.add);
+    for (final backend in ClassifierBackend.values) {
+      for (final platform in [
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+        TargetPlatform.macOS,
+      ]) {
+        test('classifies the shared capture stream with ${backend.name} on '
+            '${platform.name}', () async {
+          debugDefaultTargetPlatformOverride = platform;
+          final events = <EarshotEvent>[];
+          final subscription = const Earshot()
+              .listen(options: options(backend: backend))
+              .listen(events.add);
+          await pumpEventQueue();
 
-      detections.add(_detection(500));
-      pcm.add(_chunk(0));
-      await pumpEventQueue();
+          detections.add(_detection(500));
+          pcm.add(_chunk(0));
+          await pumpEventQueue();
 
-      verify(classifier.detections).called(1);
-      verifyNever(() => classifier.classify(any()));
-      expect(events.single.detections, [_detection(500)]);
-      await subscription.cancel();
-    });
+          verify(() => classifier.classify(any())).called(1);
+          verifyNever(classifier.detections);
+          verify(() => capture.pcm()).called(1);
+          expect(events.single.detections, [_detection(500)]);
+          await subscription.cancel();
+        });
+      }
+    }
 
-    test('opens no capture for apple without level metering', () async {
+    test('captures for the classifier without level metering', () async {
       final subscription = const Earshot()
           .listen(
             options: options(level: null, backend: ClassifierBackend.apple),
@@ -205,37 +217,10 @@ void main() {
           .listen((_) {});
       await pumpEventQueue();
 
-      verify(classifier.detections).called(1);
-      verifyNever(() => capture.pcm(config: any(named: 'config')));
-      await subscription.cancel();
-    });
-
-    test('auto classifies the shared capture stream on Android', () async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      final subscription = const Earshot()
-          .listen(options: options(backend: ClassifierBackend.auto))
-          .listen((_) {});
-      await pumpEventQueue();
-
       verify(() => classifier.classify(any())).called(1);
-      verifyNever(classifier.detections);
+      verify(() => capture.pcm()).called(1);
       await subscription.cancel();
     });
-
-    for (final platform in [TargetPlatform.iOS, TargetPlatform.macOS]) {
-      test('auto leaves backend selection to the classifier on '
-          '${platform.name}', () async {
-        debugDefaultTargetPlatformOverride = platform;
-        final subscription = const Earshot()
-            .listen(options: options(backend: ClassifierBackend.auto))
-            .listen((_) {});
-        await pumpEventQueue();
-
-        verify(classifier.detections).called(1);
-        verifyNever(() => classifier.classify(any()));
-        await subscription.cancel();
-      });
-    }
 
     test(
       'maps a capture error, ends the stream and stops everything',

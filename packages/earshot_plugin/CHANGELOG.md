@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `Earshot.listen` classifies the shared capture stream with every backend, so Apple SoundAnalysis no longer opens a second microphone session (ADR 0018). Detections share the capture clock with level readings, and `apple` never fails with `sampleRateConflict`.
+
 ## 0.1.0
 
 - `Earshot.listen` now listens: one capture subscription feeds the level meter and, with the YAMNet backend, the classifier, and the stream emits `EarshotEvent`s. With level metering on, each level reading is an event that carries the sounds confirmed since the previous one. With it off, each confirmed sound is an event. The `apple` backend, and `auto` on iOS and macOS, use `EarshotClassifier.detections()`, which runs its own microphone session in 0.1.0.

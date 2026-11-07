@@ -30,9 +30,9 @@ class EarshotClassifier {
   ///
   /// - [ClassifierBackend.yamnet] captures 16 kHz PCM with `earshot_capture`
   ///   and runs YAMNet in Dart, on every platform.
-  /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on iOS and macOS,
-  ///   with its own microphone session. On other platforms the stream errors
-  ///   with an [UnsupportedError].
+  /// - [ClassifierBackend.apple] captures 16 kHz PCM with `earshot_capture`
+  ///   and runs Apple SoundAnalysis on it, on iOS and macOS. On other
+  ///   platforms the stream errors with an [UnsupportedError].
   /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
@@ -46,25 +46,27 @@ class EarshotClassifier {
   /// delivered as stream errors.
   Stream<SoundDetection> detections() => _confirmed(_openBackend);
 
-  /// Classifies [pcm] with YAMNet and returns the sounds it confirms.
+  /// Classifies [pcm] and returns the sounds it confirms.
   ///
   /// Use this to share one capture stream with other consumers, such as a
-  /// level meter. PCM at 44.1 or 48 kHz is resampled to 16 kHz. Detections
-  /// are filtered and smoothed as in [detections].
+  /// level meter. The backend is picked as in [detections]:
   ///
-  /// Only [ClassifierBackend.yamnet] can classify PCM, so
-  /// [ClassifierBackend.auto] uses it too, and [ClassifierBackend.apple]
-  /// makes the stream error with an [UnsupportedError].
+  /// - [ClassifierBackend.yamnet] resamples PCM at 44.1 or 48 kHz to 16 kHz
+  ///   and runs YAMNet in Dart.
+  /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on [pcm], at any
+  ///   rate, on iOS and macOS. On other platforms the stream errors with an
+  ///   [UnsupportedError].
+  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
+  ///
+  /// Detections are filtered and smoothed as in [detections].
   ///
   /// Each call to `listen()` on the returned stream listens to [pcm], so
   /// [pcm] must be a broadcast stream to be listened to more than once.
   /// Cancelling the subscription cancels the subscription to [pcm].
   Stream<SoundDetection> classify(Stream<PcmChunk> pcm) => _confirmed(() async {
-    if (options.backend == ClassifierBackend.apple) {
-      throw UnsupportedError(
-        'The apple backend cannot classify PCM. Use yamnet or auto.',
-      );
-    }
+    final platform = await _nativeBackend();
+    if (platform != null) return platform.classify(pcm, _config);
     return classifyWithYamnet(() => pcm, _config);
   });
 
@@ -72,22 +74,31 @@ class EarshotClassifier {
       ClassifierConfig(minConfidence: options.minConfidence);
 
   Future<Stream<SoundDetection>> _openBackend() async {
+    final platform = await _nativeBackend();
+    if (platform != null) return platform.detections(_config);
+    return EarshotClassifierYamnet().detections(_config);
+  }
+
+  /// The native backend that [options] select on this platform, or `null`
+  /// for [ClassifierBackend.yamnet].
+  ///
+  /// Throws an [UnsupportedError] for [ClassifierBackend.apple] off iOS and
+  /// macOS.
+  Future<EarshotClassifierPlatform?> _nativeBackend() async {
     final platform = EarshotClassifierPlatform.instance;
     switch (options.backend) {
       case ClassifierBackend.yamnet:
-        return EarshotClassifierYamnet().detections(_config);
+        return null;
       case ClassifierBackend.apple:
         if (!_isApplePlatform) {
           throw UnsupportedError(
             'The apple backend is only available on iOS and macOS.',
           );
         }
-        return platform.detections(_config);
+        return platform;
       case ClassifierBackend.auto:
-        if (_isApplePlatform && await _isAvailable(platform)) {
-          return platform.detections(_config);
-        }
-        return EarshotClassifierYamnet().detections(_config);
+        if (_isApplePlatform && await _isAvailable(platform)) return platform;
+        return null;
     }
   }
 

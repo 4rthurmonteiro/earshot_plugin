@@ -25,9 +25,8 @@ class EarshotEvent {
   /// The sounds the classifier confirmed since the previous event, in the
   /// order it confirmed them. Often empty.
   ///
-  /// Detection timestamps come from the classifier's own clock. When Apple
-  /// SoundAnalysis runs its own microphone session, it is not aligned with
-  /// the level timestamps.
+  /// Detection timestamps are on the capture clock, like the level
+  /// timestamps: each is the start of the window the sound was heard in.
   final List<SoundDetection> detections;
 
   @override

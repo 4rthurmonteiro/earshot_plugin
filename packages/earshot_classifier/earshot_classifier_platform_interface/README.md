@@ -15,10 +15,11 @@ Part of [earshot](https://github.com/4rthurmonteiro/earshot_plugin): on-device a
 
 ## Implementing a backend
 
-A platform implementation extends `EarshotClassifierPlatform` and runs its own microphone session:
+A platform implementation extends `EarshotClassifierPlatform` and classifies PCM captured by `earshot_capture`:
 
 - `isAvailable()` tells whether the backend can run on this device. It must never prompt the user.
-- `detections(ClassifierConfig config)` starts a session on each `listen()` and stops it on cancel. It reports every label at or above `config.minConfidence` in each analysis window, built with `SoundVocabulary().detection(...)`, and never throws synchronously.
+- `classify(Stream<PcmChunk> pcm, ClassifierConfig config)` starts a session on each `listen()`, listens to `pcm`, and stops on cancel. It reports every label at or above `config.minConfidence` in each analysis window, built with `SoundVocabulary().detection(...)`, timestamped on the PCM clock, and never throws synchronously.
+- `detections(ClassifierConfig config)` captures with `earshot_capture` and classifies the result the same way.
 
 `earshot_classifier` applies the confidence threshold and smoothing on top, the same way for every backend. See [ADR 0014](https://github.com/4rthurmonteiro/earshot_plugin/blob/main/docs/adr/0014-classifier-platform-interface-and-model-bundling.md).
 

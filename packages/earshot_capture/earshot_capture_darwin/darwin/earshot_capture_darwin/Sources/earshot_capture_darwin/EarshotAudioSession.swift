@@ -3,14 +3,14 @@
 
   /// Shares the app's single `AVAudioSession` between the earshot plugins.
   ///
-  /// `earshot_capture_darwin` and `earshot_classifier_darwin` each run their
-  /// own `AVAudioEngine` on the one audio session of the app. Deactivating
-  /// the session stops every engine in the app, so it is deactivated only
-  /// when the last earshot user releases it (ADR 0017).
+  /// Deactivating the session stops every engine in the app, so it is
+  /// deactivated only when the last earshot user releases it (ADR 0017).
+  /// Since ADR 0018, `earshot_capture_darwin` is the only user in current
+  /// releases. The count stays so that it keeps working next to
+  /// `earshot_classifier_darwin` 0.1.0, which ran its own engine.
   ///
-  /// The two plugins are separate modules, so the user count lives in the
-  /// main thread's dictionary under a fixed key, where both can see it.
-  /// Keep this file identical in both packages.
+  /// The user count lives in the main thread's dictionary under a fixed
+  /// key, where every earshot module can see it.
   enum EarshotAudioSession {
     private static let usersKey = "dev.earshot.audioSession.users"
 

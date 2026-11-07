@@ -11,6 +11,7 @@ environment:
 resolution: workspace
 
 dependencies:
+  earshot_capture_platform_interface: ^0.1.0
   meta: ^1.15.0
   plugin_platform_interface: ^2.1.8
 

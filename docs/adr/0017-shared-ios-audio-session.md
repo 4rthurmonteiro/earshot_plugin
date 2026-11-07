@@ -1,6 +1,6 @@
 # 0017. Shared iOS audio session across the earshot plugins
 
-- Status: Accepted
+- Status: Accepted, amended by [0018](0018-soundanalysis-on-the-shared-capture-tap.md)
 - Date: 2026-11-05
 - Amends: [0015](0015-soundanalysis-sessions-and-errors.md), which listed this as a known limitation.
 
