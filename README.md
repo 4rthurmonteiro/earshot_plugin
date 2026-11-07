@@ -65,7 +65,7 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 - [x] Microphone permission request (0.1.0)
 - [x] PCM float32 mono stream at 16 / 44.1 / 48 kHz (Android, iOS, macOS) (0.1.0)
 - [x] Capture state changes (0.1.0)
-- [ ] Interruption handling (calls, Siri, Android input silencing) with auto-resume, without taking audio focus
+- [x] Interruption handling (calls, Siri, Android input silencing) with auto-resume, without taking audio focus (0.1.0)
 - [x] Unprocessed input (iOS `.measurement` mode, Android `UNPROCESSED` with `VOICE_RECOGNITION` fallback) (0.1.0)
 
 **earshot_level**

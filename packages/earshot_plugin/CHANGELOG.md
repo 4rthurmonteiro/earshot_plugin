@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Add the earshot banner to the README.
-
 ## 0.1.0
 
 - `Earshot.listen` now listens: one capture subscription feeds the level meter and, with the YAMNet backend, the classifier, and the stream emits `EarshotEvent`s. With level metering on, each level reading is an event that carries the sounds confirmed since the previous one. With it off, each confirmed sound is an event. The `apple` backend, and `auto` on iOS and macOS, use `EarshotClassifier.detections()`, which runs its own microphone session in 0.1.0.
@@ -14,6 +10,7 @@
 - Document the timestamps of `EarshotEvent` and the 16 kHz default capture rate of `EarshotOptions.capture`.
 - Accept the 0.1.x releases of `earshot_capture`, `earshot_classifier` and `earshot_level`.
 - Tests build `LevelReading` with the new `leq1s` and `leq60s` fields of `earshot_level`.
+- Add the earshot banner to the README.
 
 ## 0.0.1
 
