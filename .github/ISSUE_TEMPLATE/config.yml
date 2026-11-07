@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage questions
+    url: https://github.com/4rthurmonteiro/earshot_plugin/blob/main/README.md
+    about: Start with the README and each package's dartdoc on pub.dev. Open a bug report if the documentation is wrong or missing.
+  - name: Security reports
+    url: https://github.com/4rthurmonteiro/earshot_plugin/security/advisories/new
+    about: Report a vulnerability privately through a GitHub security advisory, not in a public issue.

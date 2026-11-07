@@ -1,0 +1,62 @@
+name: Feature request
+description: Propose a new capability or a change to the API.
+title: "feat: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, check the feature checklist in the [README](https://github.com/4rthurmonteiro/earshot_plugin/blob/main/README.md): it lists what is planned for each version. earshot never uses the network and no audio leaves the device, so proposals that need either are out of scope.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you start
+      options:
+        - label: I have searched the existing issues and the README checklist, and this has not been proposed.
+          required: true
+
+  - type: dropdown
+    id: package
+    validations:
+      required: true
+    attributes:
+      label: Package
+      options:
+        - earshot_plugin
+        - earshot_capture
+        - earshot_level
+        - earshot_classifier
+        - A new package
+        - Not sure
+
+  - type: textarea
+    id: problem
+    validations:
+      required: true
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what stops you today?
+      placeholder: In my app I need to ... but earshot only ...
+
+  - type: textarea
+    id: proposal
+    validations:
+      required: true
+    attributes:
+      label: Proposal
+      description: How would the API look? A code sample of how an app would use it is the best description.
+      render: dart
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to solve the problem, and why they fall short.
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this.

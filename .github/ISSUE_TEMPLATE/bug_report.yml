@@ -1,0 +1,114 @@
+name: Bug report
+description: Something does not work as documented.
+title: "fix: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Fill in every required field: reports without a version, a platform and reproduction steps are closed.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you start
+      options:
+        - label: I have searched the existing issues and this bug has not been reported.
+          required: true
+        - label: I have read the README of the package I am using.
+          required: true
+
+  - type: dropdown
+    id: package
+    validations:
+      required: true
+    attributes:
+      label: Package
+      description: Which package is affected? Pick the most specific one you know.
+      options:
+        - earshot_plugin
+        - earshot_capture
+        - earshot_level
+        - earshot_classifier
+        - earshot_capture_android
+        - earshot_capture_darwin
+        - earshot_classifier_darwin
+        - earshot_capture_platform_interface
+        - earshot_classifier_platform_interface
+        - Not sure
+
+  - type: input
+    id: version
+    validations:
+      required: true
+    attributes:
+      label: Package version
+      description: The version in your `pubspec.lock`.
+      placeholder: "0.1.0"
+
+  - type: dropdown
+    id: platforms
+    validations:
+      required: true
+    attributes:
+      label: Platforms
+      description: Where does the bug happen?
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - macOS
+
+  - type: textarea
+    id: device
+    validations:
+      required: true
+    attributes:
+      label: Device and OS
+      description: Real device or simulator, model and OS version. Audio bugs often depend on the device.
+      placeholder: |
+        Pixel 7, Android 15
+        iPhone 15 simulator, iOS 18.1
+
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Description
+      description: What happens, and what did you expect to happen instead?
+
+  - type: textarea
+    id: reproduction
+    validations:
+      required: true
+    attributes:
+      label: Steps to reproduce
+      description: A minimal code sample or the steps in the example app. The fastest fix comes from a sample we can paste into `examples/earshot_example`.
+      placeholder: |
+        1. Call `Earshot.listen(...)` with ...
+        2. Switch to another app that plays audio
+        3. The stream stops and never resumes
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output from `flutter run`, Logcat or the Xcode console. Automatically rendered as code, no backticks needed.
+      render: shell
+
+  - type: textarea
+    id: doctor
+    validations:
+      required: true
+    attributes:
+      label: flutter doctor -v
+      description: Paste the output of `flutter doctor -v`.
+      render: shell
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this.
