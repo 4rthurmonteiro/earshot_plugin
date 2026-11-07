@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - `Earshot.listen` classifies the shared capture stream with every backend, so Apple SoundAnalysis no longer opens a second microphone session (ADR 0018). Detections share the capture clock with level readings, and `apple` never fails with `sampleRateConflict`.
 

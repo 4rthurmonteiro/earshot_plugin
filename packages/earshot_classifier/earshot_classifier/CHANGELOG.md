@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - `EarshotClassifier.classify(pcm)` now picks the backend like `detections()`: `apple`, and `auto` on iOS and macOS when SoundAnalysis is available, run SoundAnalysis on the given PCM. `apple` no longer errors there.
 - The `apple` backend of `detections()` captures with `earshot_capture` instead of opening its own microphone session.
