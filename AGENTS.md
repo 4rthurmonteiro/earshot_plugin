@@ -92,7 +92,7 @@ Packages are published manually by the maintainer with Melos, which publishes th
 
 ```bash
 dart run melos run release:check    # pub publish --dry-run for every unpublished package
-dart run melos run release          # publish, tag and push the tags; needs a clean, up-to-date main
+dart run melos run release          # publish without asking, tag and push the tags; needs a clean, up-to-date main
 ```
 
 Never publish from an agent session.
