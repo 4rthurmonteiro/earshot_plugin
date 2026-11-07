@@ -82,18 +82,24 @@ dart run melos run release:check    # pub publish --dry-run for every unpublishe
 
 ## Workflow
 
-- **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …). PRs are squash-merged, and the PR title becomes the commit message, so it must be semantic.
+- **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …). PRs are squash-merged, and the PR title becomes the commit message, so it must be semantic. The type decides the next version of every package the PR touches (ADR 0020): below 1.0.0, `feat` and `fix` bump the patch, and a breaking change (`!`) bumps the minor. `docs`, `chore`, `ci` and `test` don't bump anything.
 - **Feature checklist:** the root `README.md` has a feature checklist for each version. When a PR implements a feature, tick its item (`- [x]`) in the same PR. On release, append the version, for example `(0.1.0)`.
-- **Changelogs:** update the `CHANGELOG.md` of every package you change.
+- **Changelogs:** update the `CHANGELOG.md` of every package you change, under a `## Unreleased` heading at the top. Never write a version heading by hand: the release turns `## Unreleased` into the new version.
 - **New decisions:** a new architectural decision gets a new ADR in `docs/adr/`, numbered sequentially and added to the index.
 
 ## Releasing
 
-Packages are published manually by the maintainer with Melos, which publishes them in dependency order (each one resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`:
+Releases are cut by the maintainer in two steps (ADR 0020):
+
+1. **Version.** From a clean, up-to-date `main`, `release:version` creates a `release/<date>` branch and runs `melos version`. Melos bumps every package changed since its `<package>-v<version>` tag, according to the Conventional Commits, and raises the constraints of the packages that depend on it. A hook turns each `## Unreleased` changelog heading into the new version. Open a PR from the branch, titled `chore(release): publish packages`, and squash-merge it.
+2. **Publish.** From `main` after the merge, Melos publishes in dependency order (each package resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`.
 
 ```bash
+dart run melos run release:version  # bump versions and changelogs on a new release/<date> branch, and commit
 dart run melos run release:check    # pub publish --dry-run for every unpublished package
 dart run melos run release          # publish without asking, tag and push the tags; needs a clean, up-to-date main
 ```
+
+To force a version, such as a milestone of the feature checklist, run the version step with `dart run melos version --yes --manual-version <package>:<minor|patch|x.y.z>` on the release branch instead.
 
 Never publish from an agent session.
