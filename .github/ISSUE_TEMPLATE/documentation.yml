@@ -1,0 +1,26 @@
+name: Documentation
+description: Something in a README, dartdoc or ADR is wrong, missing or unclear.
+title: "docs: "
+labels: ["documentation", "triage"]
+body:
+  - type: input
+    id: location
+    validations:
+      required: true
+    attributes:
+      label: Where
+      description: A link to the page or file, or the symbol whose dartdoc is affected.
+      placeholder: packages/earshot_level/README.md, or `LevelMeter.readings`
+
+  - type: textarea
+    id: problem
+    validations:
+      required: true
+    attributes:
+      label: What is wrong or missing
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested text
+      description: If you already know what it should say, write it here.
