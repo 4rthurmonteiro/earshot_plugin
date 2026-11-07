@@ -41,7 +41,7 @@ Packages are published manually by the maintainer, from a clean and up-to-date `
 
 ```bash
 dart run melos run release:check    # validates every unpublished package with pub publish --dry-run
-dart run melos run release          # publishes, tags and pushes the tags
+dart run melos run release          # publishes without asking, tags and pushes the tags
 ```
 
 The first run needs `dart pub login`.
