@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** remove `ClassifierBackend.auto`. `ClassifierBackend` now names engines only, and the vocabulary APIs no longer throw an `ArgumentError` for a backend (ADR 0023).
 - Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version (ADR 0021).
 
 ## 0.2.0

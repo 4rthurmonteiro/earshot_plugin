@@ -1,6 +1,6 @@
 # 0014. Classifier platform interface, vocabulary data and model bundling
 
-- Status: Accepted
+- Status: Accepted, amended by 0023
 - Date: 2026-11-04
 - Amends: [0011](0011-sound-vocabulary.md). Neither backend has a carbon monoxide alarm label, so under 0011's own inclusion rule the vocabulary has no CO sound. The maintainer accepted this on 2026-11-04.
 

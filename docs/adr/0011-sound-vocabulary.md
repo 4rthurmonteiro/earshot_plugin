@@ -1,6 +1,6 @@
 # 0011. Sound vocabulary and classifier backends
 
-- Status: Accepted, amended by [0014](0014-classifier-platform-interface-and-model-bundling.md) (no carbon monoxide alarm sound)
+- Status: Accepted, amended by [0014](0014-classifier-platform-interface-and-model-bundling.md) (no carbon monoxide alarm sound) and [0023](0023-no-auto-classifier-backend.md) (no `auto` backend)
 - Date: 2026-11-04
 
 ## Context

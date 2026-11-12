@@ -33,7 +33,7 @@ class EarshotClassifier {
   /// - [ClassifierBackend.apple] captures 16 kHz PCM with `earshot_capture`
   ///   and runs Apple SoundAnalysis on it, on iOS and macOS. On other
   ///   platforms the stream errors with an [UnsupportedError].
-  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  /// - With no backend set, [ClassifierBackend.apple] is used on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
   /// Detections below [ClassifierOptions.minConfidence] are dropped, and the
@@ -56,7 +56,7 @@ class EarshotClassifier {
   /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on [pcm], at any
   ///   rate, on iOS and macOS. On other platforms the stream errors with an
   ///   [UnsupportedError].
-  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  /// - With no backend set, [ClassifierBackend.apple] is used on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
   /// Detections are filtered and smoothed as in [detections].
@@ -96,7 +96,7 @@ class EarshotClassifier {
           );
         }
         return platform;
-      case ClassifierBackend.auto:
+      case null:
         if (_isApplePlatform && await _isAvailable(platform)) return platform;
         return null;
     }

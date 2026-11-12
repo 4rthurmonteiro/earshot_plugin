@@ -11,7 +11,7 @@ class ClassifierOptions {
   ///
   /// [minConfidence] must be between 0 and 1.
   const new({
-    this.backend = ClassifierBackend.auto,
+    this.backend,
     this.minConfidence = 0.5,
     this.smoothing = const Smoothing(),
   }) : assert(
@@ -19,8 +19,10 @@ class ClassifierOptions {
          'minConfidence must be between 0 and 1',
        );
 
-  /// The engine that classifies sounds. Defaults to [ClassifierBackend.auto].
-  final ClassifierBackend backend;
+  /// The engine that classifies sounds, or `null`, the default, to pick the
+  /// best one for the platform: [ClassifierBackend.apple] on iOS and macOS
+  /// when it is available, and [ClassifierBackend.yamnet] otherwise.
+  final ClassifierBackend? backend;
 
   /// Detections below this confidence are dropped. Defaults to 0.5.
   final double minConfidence;

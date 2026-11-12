@@ -41,9 +41,9 @@ void main() {
   });
 
   group(ClassifierOptions, () {
-    test('defaults to auto backend, 0.5 confidence and default smoothing', () {
+    test('defaults to no backend, 0.5 confidence and default smoothing', () {
       const options = ClassifierOptions();
-      expect(options.backend, ClassifierBackend.auto);
+      expect(options.backend, isNull);
       expect(options.minConfidence, 0.5);
       expect(options.smoothing, const Smoothing());
     });
@@ -88,7 +88,7 @@ void main() {
     test('has a readable toString', () {
       expect(
         const ClassifierOptions().toString(),
-        'ClassifierOptions(backend: ClassifierBackend.auto, '
+        'ClassifierOptions(backend: null, '
         'minConfidence: 0.5, '
         'smoothing: Smoothing(hits: 2, window: 0:00:02.000000))',
       );

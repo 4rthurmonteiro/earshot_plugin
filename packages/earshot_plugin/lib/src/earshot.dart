@@ -37,11 +37,11 @@ class Earshot {
   /// [EarshotClassifier], through [EarshotClassifier.classify], so every
   /// backend shares one microphone session:
   ///
-  /// - [ClassifierBackend.yamnet], and [ClassifierBackend.auto] on Android
-  ///   or when SoundAnalysis is unavailable, run YAMNet. PCM at 44.1 or
+  /// - [ClassifierBackend.yamnet] runs YAMNet, and so does a `null` backend
+  ///   on Android or when SoundAnalysis is unavailable. PCM at 44.1 or
   ///   48 kHz is resampled to the 16 kHz YAMNet expects.
-  /// - [ClassifierBackend.apple], and [ClassifierBackend.auto] on iOS and
-  ///   macOS, run Apple SoundAnalysis on the PCM at the capture rate.
+  /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on the PCM at the
+  ///   capture rate, and so does a `null` backend on iOS and macOS.
   ///
   /// Level readings and detections share the capture clock.
   ///
