@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Document YAMNet performance per window, measured with the benchmark in the example app (ADR 0022).
+
+## Unreleased
+
 - Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version, and show a `switch` with a wildcard case (ADR 0021).
 
 ## 0.2.0

@@ -64,6 +64,22 @@ final icon = switch (detection.group) {
 
 Detections below `minConfidence` are dropped. A sound is reported only after `Smoothing.hits` detections within `Smoothing.window` (2 within 2 seconds by default), and then for every window in which it is still detected that often.
 
+## Performance
+
+The time YAMNet takes per window, measured in profile mode with the benchmark in the example app (ADR 0022). Run it on your own device from `examples/earshot_example`:
+
+```sh
+flutter drive --profile -d <device> \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/yamnet_benchmark_test.dart
+```
+
+| Device | OS | earshot | p50 | p95 | First window |
+| --- | --- | --- | --- | --- | --- |
+| MacBook (Apple M4) | macOS 26.5 | 0.2.0 | 1.1 ms | 1.2 ms | 10 ms |
+
+The target is a p95 under 50 ms on a mid-range Android device. The first window includes loading the model.
+
 ## Minimum OS versions
 
 Sound classification on Apple platforms uses SoundAnalysis, so apps that depend on this package need iOS 15 or macOS 12 or later.

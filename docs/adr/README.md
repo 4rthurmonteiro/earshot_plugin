@@ -25,6 +25,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0019](0019-pana-in-ci.md) | pana in CI | Accepted |
 | [0020](0020-release-versioning-with-melos-version.md) | Release versioning with melos version | Accepted |
 | [0021](0021-public-api-stability-from-1-0-0.md) | Public API stability from 1.0.0 | Accepted |
+| [0022](0022-yamnet-performance-benchmark.md) | YAMNet performance benchmark | Accepted |
 
 ## Template
 
