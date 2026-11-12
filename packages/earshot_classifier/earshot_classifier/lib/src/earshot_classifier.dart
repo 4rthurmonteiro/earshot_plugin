@@ -86,20 +86,21 @@ class EarshotClassifier {
   /// macOS.
   Future<EarshotClassifierPlatform?> _nativeBackend() async {
     final platform = EarshotClassifierPlatform.instance;
-    switch (options.backend) {
-      case ClassifierBackend.yamnet:
-        return null;
-      case ClassifierBackend.apple:
-        if (!_isApplePlatform) {
-          throw UnsupportedError(
-            'The apple backend is only available on iOS and macOS.',
-          );
-        }
-        return platform;
-      case null:
-        if (_isApplePlatform && await _isAvailable(platform)) return platform;
-        return null;
+    // Comparisons rather than a switch: a switch over ClassifierBackend is
+    // not exhaustive against the 0.2.0 platform interface, which still has
+    // `auto`, and pana's downgrade check resolves that version.
+    final backend = options.backend;
+    if (backend == ClassifierBackend.yamnet) return null;
+    if (backend == ClassifierBackend.apple) {
+      if (!_isApplePlatform) {
+        throw UnsupportedError(
+          'The apple backend is only available on iOS and macOS.',
+        );
+      }
+      return platform;
     }
+    if (_isApplePlatform && await _isAvailable(platform)) return platform;
+    return null;
   }
 
   static bool get _isApplePlatform =>
