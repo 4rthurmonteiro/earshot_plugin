@@ -20,6 +20,9 @@ import 'package:earshot_classifier_platform_interface/src/sound_group.dart';
 ///
 /// earshot is informational and is not a certified detector. Never rely on
 /// it for safety, including the sounds in [SoundGroup.alarms].
+///
+/// New values may be added in a minor version. When you switch on this
+/// enum, add a wildcard (`_`) case so that your code keeps compiling.
 enum EarshotSound {
   /// Someone speaking, including children and conversations.
   speech(

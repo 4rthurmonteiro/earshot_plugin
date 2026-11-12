@@ -1,6 +1,9 @@
 import 'package:meta/meta.dart';
 
 /// Why a capture stream failed.
+///
+/// New values may be added in a minor version. When you switch on this
+/// enum, add a wildcard (`_`) case so that your code keeps compiling.
 enum CaptureErrorCode {
   /// The user denied microphone access, or has not granted it yet.
   permissionDenied,

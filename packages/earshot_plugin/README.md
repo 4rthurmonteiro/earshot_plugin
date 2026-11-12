@@ -72,6 +72,16 @@ Failures arrive as one `EarshotException` stream error, after which the stream c
 | `modelUnavailable` | The classifier could not load its model, or failed while classifying. |
 | `unknown` | Anything else. |
 
+New codes may be added in a minor version, so keep a wildcard case when you switch on them. The same goes for `EarshotSound`, `SoundGroup`, `ClassifierBackend`, `SampleRate`, `CaptureState`, `CaptureErrorCode` and `MicrophonePermissionStatus`.
+
+```dart
+final message = switch (error.code) {
+  EarshotErrorCode.permissionDenied => 'Allow the microphone in Settings.',
+  EarshotErrorCode.unsupported => 'Not available on this device.',
+  _ => 'Something went wrong.',
+};
+```
+
 ## Microphone setup
 
 Your app declares microphone access, not this package:

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version (ADR 0021).
+
 ## 0.2.0
 
 - Add `EarshotClassifierPlatform.classify(Stream<PcmChunk>, ClassifierConfig)`, so native backends classify PCM from `earshot_capture` instead of opening their own microphone session (ADR 0018). It defaults to a stream that errors with `UnimplementedError`.
