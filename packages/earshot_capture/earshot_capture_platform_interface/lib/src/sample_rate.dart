@@ -1,4 +1,7 @@
 /// The sample rates that capture can deliver PCM at.
+///
+/// New values may be added in a minor version. When you switch on this
+/// enum, add a wildcard (`_`) case so that your code keeps compiling.
 enum SampleRate {
   /// 16 kHz, the rate sound classifiers such as YAMNet expect.
   hz16000(16000),

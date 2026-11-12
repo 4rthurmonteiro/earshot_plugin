@@ -50,6 +50,16 @@ YAMNet classifies 0.975 s windows with a 50% hop, so it reports about twice per 
 
 A label that maps to no `EarshotSound` is still reported, with its `group` and `rawLabel` and a `null` `sound`. Neither backend has a separate carbon monoxide alarm label: a CO alarm is reported as `smokeAlarm`, `beep` or `alarm`.
 
+The vocabulary grows: new values of `EarshotSound`, `SoundGroup` and `ClassifierBackend` may be added in a minor version. Keep a wildcard case when you switch on them:
+
+```dart
+final icon = switch (detection.group) {
+  SoundGroup.alarms => '🚨',
+  SoundGroup.animals => '🐶',
+  _ => '🔊',
+};
+```
+
 ## Confidence and smoothing
 
 Detections below `minConfidence` are dropped. A sound is reported only after `Smoothing.hits` detections within `Smoothing.window` (2 within 2 seconds by default), and then for every window in which it is still detected that often.

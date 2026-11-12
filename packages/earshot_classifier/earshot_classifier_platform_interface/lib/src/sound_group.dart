@@ -2,6 +2,9 @@
 ///
 /// earshot is informational and is not a certified detector. Never rely on
 /// it for safety, including the [alarms] group.
+///
+/// New values may be added in a minor version. When you switch on this
+/// enum, add a wildcard (`_`) case so that your code keeps compiling.
 enum SoundGroup {
   /// Speech, laughter, crying, coughing and other human sounds.
   people,

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document that `SampleRate`, `CaptureState`, `CaptureErrorCode` and `MicrophonePermissionStatus` can gain values in a minor version (ADR 0021).
+
 ## 0.1.0
 
 - Add `CaptureException` and `CaptureErrorCode`.

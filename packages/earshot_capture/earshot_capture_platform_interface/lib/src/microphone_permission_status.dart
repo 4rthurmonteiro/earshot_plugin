@@ -1,6 +1,9 @@
 /// The status of the microphone permission for this app.
 ///
 /// Reading the status never prompts the user.
+///
+/// New values may be added in a minor version. When you switch on this
+/// enum, add a wildcard (`_`) case so that your code keeps compiling.
 enum MicrophonePermissionStatus {
   /// The user allowed microphone access.
   granted,

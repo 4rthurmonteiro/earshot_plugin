@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version, and show a `switch` with a wildcard case (ADR 0021).
+
 ## 0.2.0
 
 - `EarshotClassifier.classify(pcm)` now picks the backend like `detections()`: `apple`, and `auto` on iOS and macOS when SoundAnalysis is available, run SoundAnalysis on the given PCM. `apple` no longer errors there.

@@ -12,7 +12,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0006](0006-package-naming.md) | Package naming: by platform, umbrella is `earshot_plugin` | Accepted |
 | [0007](0007-swift-package-manager-with-podspec-fallback.md) | Swift Package Manager with CocoaPods fallback | Accepted |
 | [0008](0008-pigeon-private-to-implementation-packages.md) | Pigeon, private to implementation packages | Accepted |
-| [0009](0009-api-preview-0-0-1.md) | 0.0.1 is an API preview, not a name placeholder | Accepted |
+| [0009](0009-api-preview-0-0-1.md) | 0.0.1 is an API preview, not a name placeholder | Superseded by 0021 |
 | [0010](0010-privacy-and-liability.md) | Privacy and liability posture | Accepted |
 | [0011](0011-sound-vocabulary.md) | Sound vocabulary and classifier backends | Accepted, amended by 0014 |
 | [0012](0012-weighting-filter-design-and-level-reference.md) | Weighting filter design and level reference | Accepted |
@@ -24,6 +24,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0018](0018-soundanalysis-on-the-shared-capture-tap.md) | SoundAnalysis on the shared capture tap | Accepted |
 | [0019](0019-pana-in-ci.md) | pana in CI | Accepted |
 | [0020](0020-release-versioning-with-melos-version.md) | Release versioning with melos version | Accepted |
+| [0021](0021-public-api-stability-from-1-0-0.md) | Public API stability from 1.0.0 | Accepted |
 
 ## Template
 
