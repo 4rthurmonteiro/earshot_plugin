@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** `detections()` and `classify()` validate their options on each listen, in every build: a `minConfidence` outside 0 to 1 (or NaN) or a `Smoothing.hits` below 1 fails the stream with an `ArgumentError` before anything starts. Release builds used to accept them silently (ADR 0026).
 - **Breaking:** `ClassifierOptions.backend` is now nullable and defaults to `null`, which picks the backend as `ClassifierBackend.auto` did. `auto` is removed: drop the argument or pass `null` (ADR 0023).
 - **Breaking:** classifier streams deliver a `ClassifierException` when the backend fails, and still forward a `CaptureException` from capture unchanged. The `apple` backend off iOS and macOS fails with `ClassifierErrorCode.unsupported` instead of an `UnsupportedError`, and a YAMNet model that fails to load or run fails with `modelUnavailable` (ADR 0024).
 - Document YAMNet performance per window, measured with the benchmark in the example app (ADR 0022).

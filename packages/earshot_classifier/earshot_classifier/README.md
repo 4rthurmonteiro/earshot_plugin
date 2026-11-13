@@ -62,7 +62,7 @@ final icon = switch (detection.group) {
 
 ## Confidence and smoothing
 
-Detections below `minConfidence` are dropped. A sound is reported only after `Smoothing.hits` detections within `Smoothing.window` (2 within 2 seconds by default), and then for every window in which it is still detected that often.
+`minConfidence` must be between 0 and 1, and `Smoothing.hits` at least 1. Debug builds check them when the options are built. In every build, a stream with invalid options fails with an `ArgumentError` when it is listened to. Detections below `minConfidence` are dropped. A sound is reported only after `Smoothing.hits` detections within `Smoothing.window` (2 within 2 seconds by default), and then for every window in which it is still detected that often.
 
 ## Errors
 

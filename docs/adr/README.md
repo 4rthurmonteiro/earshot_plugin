@@ -28,6 +28,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0022](0022-yamnet-performance-benchmark.md) | YAMNet performance benchmark | Accepted |
 | [0023](0023-no-auto-classifier-backend.md) | A null backend instead of `ClassifierBackend.auto` | Accepted |
 | [0024](0024-classifier-exception.md) | Typed classifier errors | Accepted |
+| [0026](0026-classifier-option-validation.md) | Classifier option validation | Accepted |
 
 ## Template
 

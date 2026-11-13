@@ -14,6 +14,8 @@ import 'package:meta/meta.dart';
 ///   gets that code.
 /// - An [UnsupportedError], including an [UnimplementedError], is
 ///   [EarshotErrorCode.unsupported].
+/// - An [ArgumentError], such as invalid classifier options, is
+///   [EarshotErrorCode.unknown].
 /// - Anything else is [EarshotErrorCode.modelUnavailable] if
 ///   [fromClassifier], because the classifier fails only when its model
 ///   cannot be loaded or run, and [EarshotErrorCode.unknown] otherwise.
@@ -34,6 +36,8 @@ EarshotException toEarshotException(
       if (mapped != null) return EarshotException(mapped, message, error);
     case UnsupportedError(:final message):
       return EarshotException(EarshotErrorCode.unsupported, message, error);
+    case ArgumentError():
+      return EarshotException(EarshotErrorCode.unknown, '$error', error);
   }
   return EarshotException(
     fromClassifier

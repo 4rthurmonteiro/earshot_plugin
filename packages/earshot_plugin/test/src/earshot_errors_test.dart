@@ -84,6 +84,16 @@ void main() {
       );
     });
 
+    test('maps an ArgumentError to unknown, even from the classifier', () {
+      final error = ArgumentError.value(2, 'minConfidence');
+      for (final fromClassifier in [false, true]) {
+        expect(
+          map(error, fromClassifier: fromClassifier),
+          EarshotException(EarshotErrorCode.unknown, '$error', error),
+        );
+      }
+    });
+
     test('maps other classifier errors to modelUnavailable', () {
       final error = StateError('no model');
       expect(
