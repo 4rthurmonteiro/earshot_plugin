@@ -1,6 +1,6 @@
-import 'package:earshot_level/src/calibration.dart';
-import 'package:earshot_level/src/response.dart';
-import 'package:earshot_level/src/weighting.dart';
+import 'package:earshot_level/src/frequency_weighting.dart';
+import 'package:earshot_level/src/level_calibration.dart';
+import 'package:earshot_level/src/time_weighting.dart';
 import 'package:meta/meta.dart';
 
 /// {@template level_options}
@@ -10,33 +10,33 @@ import 'package:meta/meta.dart';
 class LevelOptions {
   /// {@macro level_options}
   const new({
-    this.weighting = Weighting.a,
-    this.response = Response.fast,
-    this.calibration = const Calibration(),
+    this.weighting = FrequencyWeighting.a,
+    this.timeWeighting = TimeWeighting.fast,
+    this.calibration = const LevelCalibration(),
   });
 
-  /// The frequency weighting. Defaults to [Weighting.a].
-  final Weighting weighting;
+  /// The frequency weighting. Defaults to [FrequencyWeighting.a].
+  final FrequencyWeighting weighting;
 
-  /// The time weighting. Defaults to [Response.fast].
-  final Response response;
+  /// The time weighting. Defaults to [TimeWeighting.fast].
+  final TimeWeighting timeWeighting;
 
   /// The device calibration. Defaults to no offset.
-  final Calibration calibration;
+  final LevelCalibration calibration;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is LevelOptions &&
           other.weighting == weighting &&
-          other.response == response &&
+          other.timeWeighting == timeWeighting &&
           other.calibration == calibration;
 
   @override
-  int get hashCode => Object.hash(weighting, response, calibration);
+  int get hashCode => Object.hash(weighting, timeWeighting, calibration);
 
   @override
   String toString() =>
-      'LevelOptions(weighting: $weighting, response: $response, '
+      'LevelOptions(weighting: $weighting, timeWeighting: $timeWeighting, '
       'calibration: $calibration)';
 }

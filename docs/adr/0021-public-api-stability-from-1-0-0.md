@@ -1,6 +1,6 @@
 # 0021. Public API stability from 1.0.0
 
-- Status: Accepted
+- Status: Accepted, amended by [0025](0025-level-type-names.md) (closed enums renamed)
 - Date: 2026-11-12
 
 ## Context

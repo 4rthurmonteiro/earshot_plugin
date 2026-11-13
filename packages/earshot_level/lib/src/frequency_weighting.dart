@@ -1,6 +1,6 @@
 /// The frequency weighting applied before the level is measured, as defined
 /// by IEC 61672-1.
-enum Weighting {
+enum FrequencyWeighting {
   /// A-weighting, which follows the sensitivity of human hearing at
   /// moderate levels. Readings are in dB(A).
   a,
