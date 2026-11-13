@@ -29,6 +29,7 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0023](0023-no-auto-classifier-backend.md) | A null backend instead of `ClassifierBackend.auto` | Accepted |
 | [0024](0024-classifier-exception.md) | Typed classifier errors | Accepted |
 | [0025](0025-level-type-names.md) | Level type names | Accepted |
+| [0026](0026-classifier-option-validation.md) | Classifier option validation | Accepted |
 
 ## Template
 

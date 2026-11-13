@@ -70,7 +70,7 @@ Failures arrive as one `EarshotException` stream error, after which the stream c
 | `audioUnavailable` | The microphone could not be opened or recovered. |
 | `sampleRateConflict` | Another consumer in the app captures at a different sample rate. |
 | `modelUnavailable` | The classifier could not load its model, or failed while classifying. |
-| `unknown` | Anything else. |
+| `unknown` | Anything else, including invalid classifier options such as a `minConfidence` outside 0 to 1. |
 
 New codes may be added in a minor version, so keep a wildcard case when you switch on them. The same goes for `EarshotSound`, `SoundGroup`, `ClassifierBackend`, `SampleRate`, `CaptureState`, `CaptureErrorCode`, `ClassifierErrorCode` and `MicrophonePermissionStatus`.
 

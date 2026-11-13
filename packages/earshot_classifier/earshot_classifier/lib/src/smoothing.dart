@@ -8,7 +8,9 @@ import 'package:meta/meta.dart';
 class Smoothing {
   /// {@macro smoothing}
   ///
-  /// [hits] must be at least 1.
+  /// [hits] must be at least 1. Debug builds check it here; in every build,
+  /// `EarshotClassifier` streams fail with an [ArgumentError] when it is
+  /// lower.
   const new({this.hits = 2, this.window = const Duration(seconds: 2)})
     : assert(hits >= 1, 'hits must be at least 1');
 

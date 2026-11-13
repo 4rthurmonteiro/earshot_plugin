@@ -26,6 +26,31 @@ SoundDetection _apple(int milliseconds, {double confidence = 0.9}) =>
       timestamp: Duration(milliseconds: milliseconds),
     );
 
+/// Options that skip the constructor asserts, as in a release build.
+class _UncheckedOptions extends Fake implements ClassifierOptions {
+  new({this.minConfidence = 0.5, int hits = 2})
+    : smoothing = _UncheckedSmoothing(hits);
+
+  @override
+  final double minConfidence;
+
+  @override
+  final Smoothing smoothing;
+
+  @override
+  ClassifierBackend? get backend => ClassifierBackend.yamnet;
+}
+
+class _UncheckedSmoothing extends Fake implements Smoothing {
+  new(this.hits);
+
+  @override
+  final int hits;
+
+  @override
+  Duration get window => const Duration(seconds: 2);
+}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(const ClassifierConfig());
@@ -389,6 +414,33 @@ void main() {
           verifyNever(() => platform.classify(any(), any()));
         },
       );
+    });
+  });
+
+  group('option validation', () {
+    final cases = {
+      'a confidence below 0': _UncheckedOptions(minConfidence: -0.1),
+      'a confidence above 1': _UncheckedOptions(minConfidence: 1.1),
+      'a NaN confidence': _UncheckedOptions(minConfidence: double.nan),
+      'fewer than 1 hit': _UncheckedOptions(hits: 0),
+    };
+    for (final MapEntry(key: name, value: options) in cases.entries) {
+      test('fails detections with an ArgumentError for $name', () async {
+        await expectLater(
+          EarshotClassifier(options: options).detections(),
+          emitsInOrder([emitsError(isArgumentError), emitsDone]),
+        );
+      });
+    }
+
+    test('fails classify without listening to the PCM', () async {
+      final pcm = StreamController<PcmChunk>();
+      await expectLater(
+        EarshotClassifier(options: _UncheckedOptions(minConfidence: 2))
+            .classify(pcm.stream),
+        emitsInOrder([emitsError(isArgumentError), emitsDone]),
+      );
+      expect(pcm.hasListener, isFalse);
     });
   });
 

@@ -46,8 +46,9 @@ class EarshotClassifier {
   /// and cancelling the subscription stops it. The stream never throws
   /// synchronously. Failures are delivered as stream errors: a
   /// [CaptureException] when the microphone fails, for example because the
-  /// permission is denied, and a [ClassifierException] when the backend
-  /// fails.
+  /// permission is denied, a [ClassifierException] when the backend fails,
+  /// and an [ArgumentError] when [options] are invalid, such as a
+  /// [ClassifierOptions.minConfidence] outside 0 to 1.
   Stream<SoundDetection> detections() => _confirmed(_openBackend);
 
   /// Classifies [pcm] and returns the sounds it confirms.
@@ -65,7 +66,9 @@ class EarshotClassifier {
   ///
   /// Detections are filtered and smoothed as in [detections]. Errors from
   /// [pcm], such as a [CaptureException], are forwarded unchanged, and
-  /// backend failures are delivered as a [ClassifierException].
+  /// backend failures are delivered as a [ClassifierException]. Invalid
+  /// [options] fail the stream with an [ArgumentError] without listening to
+  /// [pcm].
   ///
   /// Each call to `listen()` on the returned stream listens to [pcm], so
   /// [pcm] must be a broadcast stream to be listened to more than once.
@@ -127,9 +130,20 @@ class EarshotClassifier {
   /// Opens a raw detection stream on each `listen()`, then drops detections
   /// below the threshold and confirms the rest with [Smoothing]. Errors go
   /// through [toClassifierError].
+  ///
+  /// Invalid [options] fail the stream with an [ArgumentError] before
+  /// anything is opened, because release builds skip the constructor
+  /// asserts.
   Stream<SoundDetection> _confirmed(
     Future<Stream<SoundDetection>> Function() open,
   ) => Stream.multi((controller) {
+    final invalid = _validate(options);
+    if (invalid != null) {
+      controller
+        ..addErrorSync(invalid)
+        ..closeSync();
+      return;
+    }
     final smoother = DetectionSmoother(options.smoothing);
     StreamSubscription<SoundDetection>? subscription;
     var cancelled = false;
@@ -164,6 +178,24 @@ class EarshotClassifier {
       ),
     );
   });
+}
+
+/// The [ArgumentError] for the first invalid value in [options], or `null`
+/// if they are valid.
+ArgumentError? _validate(ClassifierOptions options) {
+  final minConfidence = options.minConfidence;
+  if (!(minConfidence >= 0 && minConfidence <= 1)) {
+    return ArgumentError.value(
+      minConfidence,
+      'minConfidence',
+      'must be between 0 and 1',
+    );
+  }
+  final hits = options.smoothing.hits;
+  if (hits < 1) {
+    return ArgumentError.value(hits, 'smoothing.hits', 'must be at least 1');
+  }
+  return null;
 }
 
 /// Keeps a [CaptureException] or a [ClassifierException] as it is, and turns

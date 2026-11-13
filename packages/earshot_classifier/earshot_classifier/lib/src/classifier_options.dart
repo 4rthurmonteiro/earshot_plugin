@@ -9,7 +9,9 @@ import 'package:meta/meta.dart';
 class ClassifierOptions {
   /// {@macro classifier_options}
   ///
-  /// [minConfidence] must be between 0 and 1.
+  /// [minConfidence] must be between 0 and 1. Debug builds check it here;
+  /// in every build, `EarshotClassifier` streams fail with an
+  /// [ArgumentError] when it is out of range.
   const new({
     this.backend,
     this.minConfidence = 0.5,
