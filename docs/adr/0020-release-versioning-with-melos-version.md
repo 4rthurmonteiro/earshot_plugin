@@ -1,6 +1,6 @@
 # 0020. Release versioning with melos version
 
-- Status: Accepted
+- Status: Accepted, amended by [0027](0027-github-release-on-publish.md) (GitHub release on publish)
 - Date: 2026-11-07
 
 ## Context
