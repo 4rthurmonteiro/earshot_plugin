@@ -8,6 +8,7 @@ import 'package:earshot_classifier_platform_interface/src/earshot_classifier_pla
 
 export 'src/classifier_backend.dart';
 export 'src/classifier_config.dart';
+export 'src/classifier_exception.dart';
 export 'src/earshot_classifier_platform.dart';
 export 'src/not_implemented.dart';
 export 'src/sound_detection.dart';

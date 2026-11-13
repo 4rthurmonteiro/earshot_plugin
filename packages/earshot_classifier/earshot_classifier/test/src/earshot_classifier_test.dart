@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
 import 'package:earshot_classifier/earshot_classifier.dart';
+import 'package:earshot_classifier/src/earshot_classifier.dart';
 import 'package:earshot_classifier_platform_interface/earshot_classifier_platform_interface.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -180,7 +182,16 @@ void main() {
           const EarshotClassifier(
             options: ClassifierOptions(backend: ClassifierBackend.apple),
           ).detections(),
-          emitsInOrder([emitsError(isA<UnsupportedError>()), emitsDone]),
+          emitsInOrder([
+            emitsError(
+              isA<ClassifierException>().having(
+                (error) => error.code,
+                'code',
+                ClassifierErrorCode.unsupported,
+              ),
+            ),
+            emitsDone,
+          ]),
         );
       });
 
@@ -204,16 +215,24 @@ void main() {
         );
       });
 
-      test('forwards backend errors', () async {
+      test('maps backend errors to ClassifierExceptions', () async {
         debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
         when(() => platform.detections(any()))
-            .thenAnswer((_) => Stream.error(StateError('denied')));
+            .thenAnswer((_) => Stream.error(StateError('broken')));
 
         await expectLater(
           const EarshotClassifier(
             options: ClassifierOptions(backend: ClassifierBackend.apple),
           ).detections(),
-          emitsInOrder([emitsError(isA<StateError>()), emitsDone]),
+          emitsInOrder([
+            emitsError(
+              const ClassifierException(
+                ClassifierErrorCode.unknown,
+                'Bad state: broken',
+              ),
+            ),
+            emitsDone,
+          ]),
         );
       });
 
@@ -325,7 +344,16 @@ void main() {
           const EarshotClassifier(
             options: ClassifierOptions(backend: ClassifierBackend.apple),
           ).classify(pcm.stream),
-          emitsInOrder([emitsError(isA<UnsupportedError>()), emitsDone]),
+          emitsInOrder([
+            emitsError(
+              isA<ClassifierException>().having(
+                (error) => error.code,
+                'code',
+                ClassifierErrorCode.unsupported,
+              ),
+            ),
+            emitsDone,
+          ]),
         );
       });
 
@@ -360,6 +388,51 @@ void main() {
           expect(detections.single.backend, ClassifierBackend.yamnet);
           verifyNever(() => platform.classify(any(), any()));
         },
+      );
+    });
+  });
+
+  group('toClassifierError', () {
+    test('keeps capture and classifier exceptions', () {
+      const capture = CaptureException(CaptureErrorCode.permissionDenied);
+      const classifier = ClassifierException(
+        ClassifierErrorCode.modelUnavailable,
+      );
+      expect(identical(toClassifierError(capture), capture), isTrue);
+      expect(identical(toClassifierError(classifier), classifier), isTrue);
+    });
+
+    test('maps UnsupportedError and UnimplementedError to unsupported', () {
+      expect(
+        toClassifierError(UnsupportedError('web')),
+        const ClassifierException(ClassifierErrorCode.unsupported, 'web'),
+      );
+      expect(
+        toClassifierError(UnimplementedError()),
+        const ClassifierException(ClassifierErrorCode.unsupported),
+      );
+    });
+
+    test('maps a PlatformException by code name, or to unknown', () {
+      expect(
+        toClassifierError(
+          PlatformException(code: 'modelUnavailable', message: 'gone'),
+        ),
+        const ClassifierException(ClassifierErrorCode.modelUnavailable, 'gone'),
+      );
+      expect(
+        toClassifierError(PlatformException(code: 'channel-error')),
+        const ClassifierException(ClassifierErrorCode.unknown),
+      );
+    });
+
+    test('maps anything else to unknown', () {
+      expect(
+        toClassifierError(StateError('boom')),
+        const ClassifierException(
+          ClassifierErrorCode.unknown,
+          'Bad state: boom',
+        ),
       );
     });
   });

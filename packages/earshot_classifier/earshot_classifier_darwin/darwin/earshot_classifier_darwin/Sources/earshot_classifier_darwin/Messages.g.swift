@@ -343,8 +343,8 @@ struct ClassifierEventMessage: Hashable, CustomStringConvertible {
   var timestampMicros: Int64
   /// The classifications at or above the session's minimum confidence.
   var classifications: [ClassificationMessage]
-  /// When set, the session failed and has stopped: a `CaptureErrorCode`
-  /// name, such as `audioUnavailable`.
+  /// When set, the session failed and has stopped: a `ClassifierErrorCode`
+  /// name, such as `modelUnavailable`.
   var errorCode: String? = nil
   /// A human-readable description of [errorCode].
   var errorMessage: String? = nil

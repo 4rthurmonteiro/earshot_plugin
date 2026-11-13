@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** SoundAnalysis failures are delivered as a `ClassifierException` instead of a `CaptureException` with `CaptureErrorCode.unknown`: `unsupported` when SoundAnalysis cannot run on the OS or at the sample rate, and `modelUnavailable` when it fails while classifying (ADR 0024).
+
 ## 0.2.0
 
 - SoundAnalysis now classifies PCM from `earshot_capture`, so classification and capture share one microphone tap (ADR 0018). The plugin no longer runs an `AVAudioEngine`, reads the microphone permission or touches the iOS audio session.

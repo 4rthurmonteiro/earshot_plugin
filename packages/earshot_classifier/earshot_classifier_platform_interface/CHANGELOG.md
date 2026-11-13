@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Breaking:** remove `ClassifierBackend.auto`. `ClassifierBackend` now names engines only, and the vocabulary APIs no longer throw an `ArgumentError` for a backend (ADR 0023).
+- Add `ClassifierException` and `ClassifierErrorCode` (`unsupported`, `modelUnavailable`, `unknown`). Backends deliver their own failures as a `ClassifierException`, and forward errors from the PCM unchanged (ADR 0024).
 - Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version (ADR 0021).
 
 ## 0.2.0

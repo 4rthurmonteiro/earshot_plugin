@@ -112,7 +112,15 @@ void main() {
       restore = useFakeInterpreter(interpreter, error: StateError('no model'));
       await expectLater(
         classify(),
-        emitsInOrder([emitsError(isA<StateError>()), emitsDone]),
+        emitsInOrder([
+          emitsError(
+            const ClassifierException(
+              ClassifierErrorCode.modelUnavailable,
+              'Bad state: no model',
+            ),
+          ),
+          emitsDone,
+        ]),
       );
       expect(pcm.hasListener, isFalse);
     });
@@ -127,7 +135,13 @@ void main() {
       interpreter.runError = null;
       pcm.add(silentChunk(7800));
       await pumpEventQueue();
-      expect(events, [isA<StateError>(), isA<SoundDetection>()]);
+      expect(events, [
+        const ClassifierException(
+          ClassifierErrorCode.modelUnavailable,
+          'Bad state: inference failed',
+        ),
+        isA<SoundDetection>(),
+      ]);
     });
 
     test('forwards PCM errors', () async {

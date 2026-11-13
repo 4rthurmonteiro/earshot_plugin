@@ -76,8 +76,8 @@ class ClassifierEventMessage {
   /// The classifications at or above the session's minimum confidence.
   List<ClassificationMessage> classifications;
 
-  /// When set, the session failed and has stopped: a `CaptureErrorCode`
-  /// name, such as `audioUnavailable`.
+  /// When set, the session failed and has stopped: a `ClassifierErrorCode`
+  /// name, such as `modelUnavailable`.
   String? errorCode;
 
   /// A human-readable description of [errorCode].
