@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
+- First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - **Breaking:** the re-exported level types are renamed: `FrequencyWeighting`, `TimeWeighting` and `LevelCalibration`, and `LevelOptions.timeWeighting` (ADR 0025).
 - Map an `ArgumentError`, such as invalid classifier options, to `EarshotErrorCode.unknown` instead of `modelUnavailable` (ADR 0026).
 - **Breaking:** `ClassifierBackend.auto` is removed. Leave `ClassifierOptions.backend` unset to let earshot pick the backend (ADR 0023).

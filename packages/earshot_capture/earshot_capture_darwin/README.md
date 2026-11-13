@@ -4,9 +4,6 @@
 [![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-> [!WARNING]
-> **Pre-release (0.x).** The public API may still change in 0.x. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
-
 The iOS and macOS implementation of [`earshot_capture`](https://pub.dev/packages/earshot_capture), with Swift Package Manager and CocoaPods support. It is endorsed, so apps should depend on `earshot_capture` and get this package automatically.
 
 Part of [earshot](https://github.com/4rthurmonteiro/earshot_plugin): on-device ambient listening with no network access, where no audio leaves the device.

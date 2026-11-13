@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
+- First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - Document that `SampleRate`, `CaptureState`, `CaptureErrorCode` and `MicrophonePermissionStatus` can gain values in a minor version (ADR 0021).
 
 ## 0.1.0

@@ -11,8 +11,8 @@
 [![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-> [!WARNING]
-> **Pre-release (0.2.0).** Capture, level metering and sound classification work on Android, iOS and macOS. The public API may still change before 1.0.0. The [feature checklist](#feature-checklist) shows what works today.
+> [!NOTE]
+> **Stable (1.0.0).** Capture, level metering and sound classification work on Android, iOS and macOS. The public API follows semantic versioning: breaking changes only come in a major version ([ADR 0021](docs/adr/0021-public-api-stability-from-1-0-0.md)). The [feature checklist](#feature-checklist) shows what each version added.
 
 On-device ambient listening for Flutter. earshot tells your app **how loud it is**, in dB(A) with Leq and calibration, and **what is sounding**, through sound classification. It has the same API on Android, iOS and macOS.
 
@@ -94,8 +94,8 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 
 ### 1.0.0: stable
 
-- [x] Stable public API
-- [x] Performance measured on real devices (YAMNet under 50 ms per window on a mid-range Android device)
+- [x] Stable public API (1.0.0)
+- [x] Performance measured on real devices (YAMNet under 50 ms per window on a mid-range Android device) (1.0.0)
 
 ## Contributing
 

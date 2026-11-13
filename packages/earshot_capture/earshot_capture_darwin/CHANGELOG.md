@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+- First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
+
 ## 0.2.0
 
 - Document that capture is now the only user of the shared iOS audio session (ADR 0018). Behaviour is unchanged.

@@ -1,6 +1,6 @@
 name: earshot_capture
-description: "Pre-release: on-device microphone capture for Flutter as a float32 PCM stream, with permission status. No network."
-version: 0.2.0
+description: "On-device microphone capture for Flutter as a float32 PCM stream, with permission status. No network."
+version: 1.0.0
 repository: https://github.com/4rthurmonteiro/earshot_plugin/tree/main/packages/earshot_capture/earshot_capture
 issue_tracker: https://github.com/4rthurmonteiro/earshot_plugin/issues
 topics: [audio, microphone, pcm]
@@ -22,9 +22,9 @@ flutter:
         default_package: earshot_capture_darwin
 
 dependencies:
-  earshot_capture_android: ^0.1.0
-  earshot_capture_darwin: ^0.2.0
-  earshot_capture_platform_interface: ^0.1.0
+  earshot_capture_android: ^1.0.0
+  earshot_capture_darwin: ^1.0.0
+  earshot_capture_platform_interface: ^1.0.0
   flutter:
     sdk: flutter
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+- First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
+
 ## 0.1.0
 
 - Microphone permission request through the foreground `Activity`.

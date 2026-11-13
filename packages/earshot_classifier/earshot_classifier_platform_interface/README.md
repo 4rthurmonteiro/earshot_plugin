@@ -4,9 +4,6 @@
 [![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-> [!WARNING]
-> **Pre-release (0.x).** The public API may still change in 0.x. See the [feature checklist](https://github.com/4rthurmonteiro/earshot_plugin#feature-checklist) for what works today.
-
 The pure Dart platform interface for [`earshot_classifier`](https://pub.dev/packages/earshot_classifier). Apps should depend on `earshot_classifier` instead.
 
 It holds the types every backend shares: `SoundDetection`, `SoundGroup`, `ClassifierBackend`, the `EarshotSound` vocabulary and `SoundVocabulary`, which maps each backend's raw labels to sounds and groups.

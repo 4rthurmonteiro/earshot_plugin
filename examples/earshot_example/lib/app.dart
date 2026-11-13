@@ -5,7 +5,7 @@ import 'package:earshot_plugin/earshot_plugin.dart';
 import 'package:flutter/material.dart';
 
 /// The earshot version this example demonstrates.
-const kEarshotVersion = '0.2.0';
+const kEarshotVersion = '1.0.0';
 
 /// How many recent detections the page keeps on screen.
 const kMaxDetections = 20;
