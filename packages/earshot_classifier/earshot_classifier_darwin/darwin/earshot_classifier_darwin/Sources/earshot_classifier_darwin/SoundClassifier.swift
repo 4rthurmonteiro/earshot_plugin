@@ -29,7 +29,7 @@ final class SoundClassifier {
       guard let self, self.sessions[id] != nil else { return }
       self.onEvent(
         ClassifierEventMessage(
-          sessionId: id, timestampMicros: 0, classifications: [], errorCode: "unknown",
+          sessionId: id, timestampMicros: 0, classifications: [], errorCode: "modelUnavailable",
           errorMessage: message))
       self.stop(id: id)
     })
@@ -43,7 +43,7 @@ final class SoundClassifier {
   func start(id: Int64, minConfidence: Double) throws {
     guard Self.isAvailable() else {
       throw PigeonError(
-        code: "unknown", message: "SoundAnalysis cannot classify on this OS.", details: nil)
+        code: "unsupported", message: "SoundAnalysis cannot classify on this OS.", details: nil)
     }
     stop(id: id)
     sessions[id] = minConfidence
@@ -163,7 +163,7 @@ private final class AnalysisQueue {
   ) throws -> Target {
     guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else {
       throw PigeonError(
-        code: "unknown", message: "Unsupported sample rate \(sampleRate) Hz.", details: nil)
+        code: "unsupported", message: "Unsupported sample rate \(sampleRate) Hz.", details: nil)
     }
     let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
     let analyzer = SNAudioStreamAnalyzer(format: format)

@@ -1,4 +1,5 @@
 import 'package:earshot_capture/earshot_capture.dart';
+import 'package:earshot_classifier/earshot_classifier.dart';
 import 'package:earshot_plugin/src/earshot_exception.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
@@ -8,6 +9,7 @@ import 'package:meta/meta.dart';
 ///
 /// - An [EarshotException] is returned as is.
 /// - A [CaptureException] keeps its code.
+/// - A [ClassifierException] keeps its code.
 /// - A [PlatformException] whose code is the name of an [EarshotErrorCode]
 ///   gets that code.
 /// - An [UnsupportedError], including an [UnimplementedError], is
@@ -25,6 +27,8 @@ EarshotException toEarshotException(
       return error;
     case CaptureException(:final code, :final message):
       return EarshotException(_captureCode(code), message, error);
+    case ClassifierException(:final code, :final message):
+      return EarshotException(_classifierCode(code), message, error);
     case PlatformException(:final code, :final message):
       final mapped = EarshotErrorCode.values.asNameMap()[code];
       if (mapped != null) return EarshotException(mapped, message, error);
@@ -45,4 +49,10 @@ EarshotErrorCode _captureCode(CaptureErrorCode code) => switch (code) {
   CaptureErrorCode.audioUnavailable => EarshotErrorCode.audioUnavailable,
   CaptureErrorCode.sampleRateConflict => EarshotErrorCode.sampleRateConflict,
   CaptureErrorCode.unknown => EarshotErrorCode.unknown,
+};
+
+EarshotErrorCode _classifierCode(ClassifierErrorCode code) => switch (code) {
+  ClassifierErrorCode.unsupported => EarshotErrorCode.unsupported,
+  ClassifierErrorCode.modelUnavailable => EarshotErrorCode.modelUnavailable,
+  ClassifierErrorCode.unknown => EarshotErrorCode.unknown,
 };

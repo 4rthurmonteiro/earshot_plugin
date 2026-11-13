@@ -1,6 +1,7 @@
 import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
 import 'package:earshot_classifier_platform_interface/src/classifier_backend.dart';
 import 'package:earshot_classifier_platform_interface/src/classifier_config.dart';
+import 'package:earshot_classifier_platform_interface/src/classifier_exception.dart';
 import 'package:earshot_classifier_platform_interface/src/not_implemented.dart';
 import 'package:earshot_classifier_platform_interface/src/sound_detection.dart';
 import 'package:earshot_classifier_platform_interface/src/unsupported_earshot_classifier.dart';
@@ -76,6 +77,8 @@ abstract class EarshotClassifierPlatform extends PlatformInterface {
   ///   forward after an interruption.
   /// - Never throw synchronously: deliver failures as stream errors. Errors
   ///   from [pcm], such as a [CaptureException], are forwarded unchanged.
+  ///   Failures of the backend itself are delivered as a
+  ///   [ClassifierException].
   /// - Report every label scored at or above [ClassifierConfig.minConfidence]
   ///   in each analysis window, built with [SoundVocabulary.detection] so
   ///   that the sound, group and backend are filled in. Detections of the

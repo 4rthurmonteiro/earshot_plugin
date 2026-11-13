@@ -33,6 +33,24 @@ void main() {
       }
     });
 
+    test('keeps the code and message of a ClassifierException', () {
+      const expected = {
+        ClassifierErrorCode.unsupported: EarshotErrorCode.unsupported,
+        ClassifierErrorCode.modelUnavailable: EarshotErrorCode.modelUnavailable,
+        ClassifierErrorCode.unknown: EarshotErrorCode.unknown,
+      };
+      expect(expected.keys, containsAll(ClassifierErrorCode.values));
+      for (final MapEntry(:key, :value) in expected.entries) {
+        final error = ClassifierException(key, 'details');
+        for (final fromClassifier in [false, true]) {
+          expect(
+            map(error, fromClassifier: fromClassifier),
+            EarshotException(value, 'details', error),
+          );
+        }
+      }
+    });
+
     test('maps a PlatformException whose code names an error code', () {
       final error = PlatformException(code: 'permissionDenied', message: 'no');
       expect(

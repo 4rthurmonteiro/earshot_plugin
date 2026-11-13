@@ -221,14 +221,14 @@ void main() {
         verify(() => hostApi.stopSession(0)).called(1);
       });
 
-      test('maps an analyze error to a CaptureException', () async {
+      test('maps an analyze error to a ClassifierException', () async {
         when(() => hostApi.analyze(any())).thenAnswer(
           (_) => Future.error(PlatformException(code: 'channel-error')),
         );
         final expectation = expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
           emitsInOrder([
-            emitsError(const CaptureException(CaptureErrorCode.unknown)),
+            emitsError(const ClassifierException(ClassifierErrorCode.unknown)),
             emitsDone,
           ]),
         );
@@ -327,10 +327,10 @@ void main() {
         verify(() => hostApi.stopSession(ids[1])).called(1);
       });
 
-      test('maps a start error to a CaptureException and closes', () async {
+      test('maps a start error to a ClassifierException and closes', () async {
         when(() => hostApi.startSession(any())).thenAnswer(
           (_) => Future.error(
-            PlatformException(code: 'permissionDenied', message: 'denied'),
+            PlatformException(code: 'unsupported', message: 'too old'),
           ),
         );
 
@@ -338,9 +338,9 @@ void main() {
           platform.classify(pcm.stream, const ClassifierConfig()),
           emitsInOrder([
             emitsError(
-              const CaptureException(
-                CaptureErrorCode.permissionDenied,
-                'denied',
+              const ClassifierException(
+                ClassifierErrorCode.unsupported,
+                'too old',
               ),
             ),
             emitsDone,
@@ -356,7 +356,7 @@ void main() {
 
         await expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
-          emitsError(const CaptureException(CaptureErrorCode.unknown)),
+          emitsError(const ClassifierException(ClassifierErrorCode.unknown)),
         );
       });
 
@@ -367,7 +367,10 @@ void main() {
         await expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
           emitsError(
-            const CaptureException(CaptureErrorCode.unknown, 'Bad state: boom'),
+            const ClassifierException(
+              ClassifierErrorCode.unknown,
+              'Bad state: boom',
+            ),
           ),
         );
       });
@@ -379,7 +382,10 @@ void main() {
           emitsInOrder([
             _detection('dog_bark', 0.9, 0),
             emitsError(
-              const CaptureException(CaptureErrorCode.audioUnavailable, 'gone'),
+              const ClassifierException(
+                ClassifierErrorCode.modelUnavailable,
+                'gone',
+              ),
             ),
             emitsDone,
           ]),
@@ -393,7 +399,7 @@ void main() {
               sessionId: 0,
               timestampMicros: 0,
               classifications: [],
-              errorCode: 'audioUnavailable',
+              errorCode: 'modelUnavailable',
               errorMessage: 'gone',
             ),
           )
@@ -405,7 +411,7 @@ void main() {
       test('maps an unknown error event code to unknown', () async {
         final expectation = expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
-          emitsError(const CaptureException(CaptureErrorCode.unknown)),
+          emitsError(const ClassifierException(ClassifierErrorCode.unknown)),
         );
         await pumpEventQueue();
 
@@ -420,12 +426,12 @@ void main() {
         await expectation;
       });
 
-      test('forwards event channel errors as CaptureExceptions', () async {
+      test('forwards event channel errors as ClassifierExceptions', () async {
         final expectation = expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
           emitsInOrder([
             emitsError(
-              const CaptureException(CaptureErrorCode.unknown, 'broken'),
+              const ClassifierException(ClassifierErrorCode.unknown, 'broken'),
             ),
             emitsDone,
           ]),
@@ -439,8 +445,8 @@ void main() {
         await expectation;
       });
 
-      test('passes CaptureExceptions through unchanged', () async {
-        const error = CaptureException(CaptureErrorCode.audioUnavailable);
+      test('passes ClassifierExceptions through unchanged', () async {
+        const error = ClassifierException(ClassifierErrorCode.modelUnavailable);
         final expectation = expectLater(
           platform.classify(pcm.stream, const ClassifierConfig()),
           emitsError(same(error)),

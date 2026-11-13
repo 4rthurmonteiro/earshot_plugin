@@ -1,6 +1,6 @@
 # 0016. Umbrella stream composition and error codes
 
-- Status: Accepted, classifier path amended by [0018](0018-soundanalysis-on-the-shared-capture-tap.md)
+- Status: Accepted, classifier path amended by [0018](0018-soundanalysis-on-the-shared-capture-tap.md), error mapping amended by [0024](0024-classifier-exception.md)
 - Date: 2026-11-04
 
 ## Context

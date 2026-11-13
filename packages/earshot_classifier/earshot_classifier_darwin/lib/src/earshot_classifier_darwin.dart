@@ -84,8 +84,10 @@ class EarshotClassifierDarwin extends EarshotClassifierPlatform {
   ///
   /// The first error ends the stream. Errors from [pcm], such as a
   /// [CaptureException], are forwarded unchanged. SoundAnalysis failures
-  /// are delivered as a [CaptureException] with
-  /// [CaptureErrorCode.unknown].
+  /// are delivered as a [ClassifierException]:
+  /// [ClassifierErrorCode.unsupported] when SoundAnalysis cannot run on this
+  /// OS or at this sample rate, and [ClassifierErrorCode.modelUnavailable]
+  /// when it fails while classifying.
   @override
   Stream<SoundDetection> classify(
     Stream<PcmChunk> pcm,
@@ -119,7 +121,7 @@ class EarshotClassifierDarwin extends EarshotClassifierPlatform {
     }
 
     void fail(Object error, StackTrace? stackTrace) =>
-        end(_toCaptureException(error), stackTrace);
+        end(_toClassifierException(error), stackTrace);
 
     void onChunk(PcmChunk chunk) {
       final samples = chunk.samples;
@@ -147,11 +149,7 @@ class EarshotClassifierDarwin extends EarshotClassifierPlatform {
       final errorCode = message.errorCode;
       if (errorCode != null) {
         fail(
-          CaptureException(
-            CaptureErrorCode.values.asNameMap()[errorCode] ??
-                CaptureErrorCode.unknown,
-            message.errorMessage,
-          ),
+          ClassifierException(_classifierCode(errorCode), message.errorMessage),
           null,
         );
         return;
@@ -204,11 +202,14 @@ class EarshotClassifierDarwin extends EarshotClassifierPlatform {
   });
 }
 
-CaptureException _toCaptureException(Object error) {
-  if (error is CaptureException) return error;
-  if (error is PlatformException) {
-    final code = CaptureErrorCode.values.asNameMap()[error.code];
-    return CaptureException(code ?? CaptureErrorCode.unknown, error.message);
-  }
-  return CaptureException(CaptureErrorCode.unknown, '$error');
-}
+ClassifierErrorCode _classifierCode(String code) =>
+    ClassifierErrorCode.values.asNameMap()[code] ?? ClassifierErrorCode.unknown;
+
+ClassifierException _toClassifierException(Object error) => switch (error) {
+  ClassifierException() => error,
+  PlatformException(:final code, :final message) => ClassifierException(
+    _classifierCode(code),
+    message,
+  ),
+  _ => ClassifierException(ClassifierErrorCode.unknown, '$error'),
+};

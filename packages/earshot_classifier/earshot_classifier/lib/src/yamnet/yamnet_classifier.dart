@@ -51,7 +51,9 @@ List<SoundDetection> yamnetDetections(
 ///
 /// Each `listen()` loads its own model, then calls [openPcm] and listens to
 /// the stream it returns. Cancelling the subscription cancels that stream
-/// and releases the model.
+/// and releases the model. Errors from the PCM are forwarded unchanged, and
+/// a model that fails to load or run is reported as a [ClassifierException]
+/// with [ClassifierErrorCode.modelUnavailable].
 @internal
 Stream<SoundDetection> classifyWithYamnet(
   Stream<PcmChunk> Function() openPcm,
@@ -81,7 +83,7 @@ class _YamnetSession {
     } on Object catch (error, stackTrace) {
       if (!_cancelled) {
         _controller
-          ..addError(error, stackTrace)
+          ..addError(_modelError(error), stackTrace)
           ..closeSync();
       }
       return;
@@ -118,7 +120,7 @@ class _YamnetSession {
         minConfidence: _config.minConfidence,
       ).forEach(_controller.addSync);
     } on Object catch (error, stackTrace) {
-      if (!_cancelled) _controller.addErrorSync(error, stackTrace);
+      if (!_cancelled) _controller.addErrorSync(_modelError(error), stackTrace);
     }
   }
 
@@ -133,6 +135,9 @@ class _YamnetSession {
     await _inference;
     await _release();
   }
+
+  static ClassifierException _modelError(Object error) =>
+      ClassifierException(ClassifierErrorCode.modelUnavailable, '$error');
 
   /// Closes the model once, whether the PCM ended or the listener cancelled.
   Future<void> _release() async {

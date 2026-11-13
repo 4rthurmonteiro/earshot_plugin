@@ -72,7 +72,7 @@ Failures arrive as one `EarshotException` stream error, after which the stream c
 | `modelUnavailable` | The classifier could not load its model, or failed while classifying. |
 | `unknown` | Anything else. |
 
-New codes may be added in a minor version, so keep a wildcard case when you switch on them. The same goes for `EarshotSound`, `SoundGroup`, `ClassifierBackend`, `SampleRate`, `CaptureState`, `CaptureErrorCode` and `MicrophonePermissionStatus`.
+New codes may be added in a minor version, so keep a wildcard case when you switch on them. The same goes for `EarshotSound`, `SoundGroup`, `ClassifierBackend`, `SampleRate`, `CaptureState`, `CaptureErrorCode`, `ClassifierErrorCode` and `MicrophonePermissionStatus`.
 
 ```dart
 final message = switch (error.code) {

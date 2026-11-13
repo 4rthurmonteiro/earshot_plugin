@@ -64,6 +64,18 @@ final icon = switch (detection.group) {
 
 Detections below `minConfidence` are dropped. A sound is reported only after `Smoothing.hits` detections within `Smoothing.window` (2 within 2 seconds by default), and then for every window in which it is still detected that often.
 
+## Errors
+
+A classifier stream delivers two kinds of error. A `CaptureException` means the microphone failed, for example because the permission is denied. A `ClassifierException` means the backend failed:
+
+| `ClassifierErrorCode` | When |
+| --- | --- |
+| `unsupported` | The backend can't run here, for example `apple` on Android. |
+| `modelUnavailable` | The model failed to load, or failed while classifying. |
+| `unknown` | Anything else. |
+
+New codes may be added in a minor version, so keep a wildcard case when you switch on them.
+
 ## Performance
 
 The time YAMNet takes per window, measured in profile mode with the benchmark in the example app (ADR 0022). Run it on your own device from `examples/earshot_example`:

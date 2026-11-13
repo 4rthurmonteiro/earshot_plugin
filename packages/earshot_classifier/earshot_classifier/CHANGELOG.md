@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** classifier streams deliver a `ClassifierException` when the backend fails, and still forward a `CaptureException` from capture unchanged. The `apple` backend off iOS and macOS fails with `ClassifierErrorCode.unsupported` instead of an `UnsupportedError`, and a YAMNet model that fails to load or run fails with `modelUnavailable` (ADR 0024).
 - Document YAMNet performance per window, measured with the benchmark in the example app (ADR 0022).
 
 ## Unreleased

@@ -13,11 +13,13 @@ import 'package:earshot_classifier_platform_interface/earshot_classifier_platfor
 export 'package:earshot_classifier_platform_interface/earshot_classifier_platform_interface.dart'
     show
         ClassifierBackend,
+        ClassifierErrorCode,
+        ClassifierException,
         EarshotSound,
         SoundDetection,
         SoundGroup,
         SoundVocabulary;
 
 export 'src/classifier_options.dart';
-export 'src/earshot_classifier.dart';
+export 'src/earshot_classifier.dart' show EarshotClassifier;
 export 'src/smoothing.dart';

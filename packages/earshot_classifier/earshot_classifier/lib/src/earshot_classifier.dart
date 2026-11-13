@@ -8,6 +8,7 @@ import 'package:earshot_classifier/src/smoothing.dart';
 import 'package:earshot_classifier/src/yamnet/yamnet_classifier.dart';
 import 'package:earshot_classifier_platform_interface/earshot_classifier_platform_interface.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 /// {@template earshot_classifier}
 /// Recognizes sounds on-device.
@@ -32,7 +33,8 @@ class EarshotClassifier {
   ///   and runs YAMNet in Dart, on every platform.
   /// - [ClassifierBackend.apple] captures 16 kHz PCM with `earshot_capture`
   ///   and runs Apple SoundAnalysis on it, on iOS and macOS. On other
-  ///   platforms the stream errors with an [UnsupportedError].
+  ///   platforms the stream errors with a [ClassifierException] with
+  ///   [ClassifierErrorCode.unsupported].
   /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
@@ -42,8 +44,10 @@ class EarshotClassifier {
   ///
   /// Each call to `listen()` on the returned stream starts its own session,
   /// and cancelling the subscription stops it. The stream never throws
-  /// synchronously: failures, such as a denied microphone permission, are
-  /// delivered as stream errors.
+  /// synchronously. Failures are delivered as stream errors: a
+  /// [CaptureException] when the microphone fails, for example because the
+  /// permission is denied, and a [ClassifierException] when the backend
+  /// fails.
   Stream<SoundDetection> detections() => _confirmed(_openBackend);
 
   /// Classifies [pcm] and returns the sounds it confirms.
@@ -54,12 +58,14 @@ class EarshotClassifier {
   /// - [ClassifierBackend.yamnet] resamples PCM at 44.1 or 48 kHz to 16 kHz
   ///   and runs YAMNet in Dart.
   /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on [pcm], at any
-  ///   rate, on iOS and macOS. On other platforms the stream errors with an
-  ///   [UnsupportedError].
+  ///   rate, on iOS and macOS. On other platforms the stream errors with a
+  ///   [ClassifierException] with [ClassifierErrorCode.unsupported].
   /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
-  /// Detections are filtered and smoothed as in [detections].
+  /// Detections are filtered and smoothed as in [detections]. Errors from
+  /// [pcm], such as a [CaptureException], are forwarded unchanged, and
+  /// backend failures are delivered as a [ClassifierException].
   ///
   /// Each call to `listen()` on the returned stream listens to [pcm], so
   /// [pcm] must be a broadcast stream to be listened to more than once.
@@ -82,8 +88,8 @@ class EarshotClassifier {
   /// The native backend that [options] select on this platform, or `null`
   /// for [ClassifierBackend.yamnet].
   ///
-  /// Throws an [UnsupportedError] for [ClassifierBackend.apple] off iOS and
-  /// macOS.
+  /// Throws a [ClassifierException] for [ClassifierBackend.apple] off iOS
+  /// and macOS.
   Future<EarshotClassifierPlatform?> _nativeBackend() async {
     final platform = EarshotClassifierPlatform.instance;
     switch (options.backend) {
@@ -91,7 +97,8 @@ class EarshotClassifier {
         return null;
       case ClassifierBackend.apple:
         if (!_isApplePlatform) {
-          throw UnsupportedError(
+          throw const ClassifierException(
+            ClassifierErrorCode.unsupported,
             'The apple backend is only available on iOS and macOS.',
           );
         }
@@ -117,7 +124,8 @@ class EarshotClassifier {
   }
 
   /// Opens a raw detection stream on each `listen()`, then drops detections
-  /// below the threshold and confirms the rest with [Smoothing].
+  /// below the threshold and confirms the rest with [Smoothing]. Errors go
+  /// through [toClassifierError].
   Stream<SoundDetection> _confirmed(
     Future<Stream<SoundDetection>> Function() open,
   ) => Stream.multi((controller) {
@@ -138,7 +146,8 @@ class EarshotClassifier {
               final confirmed = smoother.add(detection);
               if (confirmed != null) controller.addSync(confirmed);
             },
-            onError: controller.addErrorSync,
+            onError: (Object error, StackTrace stackTrace) =>
+                controller.addErrorSync(toClassifierError(error), stackTrace),
             onDone: controller.closeSync,
           );
           controller
@@ -148,10 +157,32 @@ class EarshotClassifier {
         onError: (Object error, StackTrace stackTrace) {
           if (cancelled) return;
           controller
-            ..addErrorSync(error, stackTrace)
+            ..addErrorSync(toClassifierError(error), stackTrace)
             ..closeSync();
         },
       ),
     );
   });
 }
+
+/// Keeps a [CaptureException] or a [ClassifierException] as it is, and turns
+/// any other [error] from a backend into a [ClassifierException]:
+///
+/// - An [UnsupportedError], including an [UnimplementedError], is
+///   [ClassifierErrorCode.unsupported].
+/// - A [PlatformException] whose code is the name of a [ClassifierErrorCode]
+///   gets that code.
+/// - Anything else is [ClassifierErrorCode.unknown].
+@internal
+Object toClassifierError(Object error) => switch (error) {
+  CaptureException() || ClassifierException() => error,
+  UnsupportedError(:final message) => ClassifierException(
+    ClassifierErrorCode.unsupported,
+    message,
+  ),
+  PlatformException(:final code, :final message) => ClassifierException(
+    ClassifierErrorCode.values.asNameMap()[code] ?? ClassifierErrorCode.unknown,
+    message,
+  ),
+  _ => ClassifierException(ClassifierErrorCode.unknown, '$error'),
+};

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `ClassifierException` and `ClassifierErrorCode` (`unsupported`, `modelUnavailable`, `unknown`). Backends deliver their own failures as a `ClassifierException`, and forward errors from the PCM unchanged (ADR 0024).
 - Document that `EarshotSound`, `SoundGroup` and `ClassifierBackend` can gain values in a minor version (ADR 0021).
 
 ## 0.2.0
