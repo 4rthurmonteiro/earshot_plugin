@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** the re-exported level types are renamed: `FrequencyWeighting`, `TimeWeighting` and `LevelCalibration`, and `LevelOptions.timeWeighting` (ADR 0025).
 - Map an `ArgumentError`, such as invalid classifier options, to `EarshotErrorCode.unknown` instead of `modelUnavailable` (ADR 0026).
 - **Breaking:** `ClassifierBackend.auto` is removed. Leave `ClassifierOptions.backend` unset to let earshot pick the backend (ADR 0023).
 - Map a `ClassifierException` to the `EarshotErrorCode` of the same name (ADR 0024).

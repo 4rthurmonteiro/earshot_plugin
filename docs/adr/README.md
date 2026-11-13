@@ -24,10 +24,11 @@ Each file records one decision: the context, what was decided, and its consequen
 | [0018](0018-soundanalysis-on-the-shared-capture-tap.md) | SoundAnalysis on the shared capture tap | Accepted |
 | [0019](0019-pana-in-ci.md) | pana in CI | Accepted |
 | [0020](0020-release-versioning-with-melos-version.md) | Release versioning with melos version | Accepted |
-| [0021](0021-public-api-stability-from-1-0-0.md) | Public API stability from 1.0.0 | Accepted |
+| [0021](0021-public-api-stability-from-1-0-0.md) | Public API stability from 1.0.0 | Accepted, amended by 0025 |
 | [0022](0022-yamnet-performance-benchmark.md) | YAMNet performance benchmark | Accepted |
 | [0023](0023-no-auto-classifier-backend.md) | A null backend instead of `ClassifierBackend.auto` | Accepted |
 | [0024](0024-classifier-exception.md) | Typed classifier errors | Accepted |
+| [0025](0025-level-type-names.md) | Level type names | Accepted |
 | [0026](0026-classifier-option-validation.md) | Classifier option validation | Accepted |
 
 ## Template

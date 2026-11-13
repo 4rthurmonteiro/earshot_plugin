@@ -1,4 +1,4 @@
-import 'package:earshot_level/src/weighting.dart';
+import 'package:earshot_level/src/frequency_weighting.dart';
 import 'package:meta/meta.dart';
 
 /// {@template level_reading}
@@ -46,7 +46,7 @@ class LevelReading {
   final double leq60s;
 
   /// The frequency weighting every level was measured with.
-  final Weighting weighting;
+  final FrequencyWeighting weighting;
 
   /// The time just after the last sample measured, relative to the start of
   /// capture.

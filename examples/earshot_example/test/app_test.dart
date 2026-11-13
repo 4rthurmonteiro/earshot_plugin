@@ -183,7 +183,7 @@ EarshotEvent _event({
     leq: 45,
     leq1s: 50,
     leq60s: 40,
-    weighting: Weighting.a,
+    weighting: FrequencyWeighting.a,
     timestamp: const Duration(seconds: 1),
   ),
   detections: detections,

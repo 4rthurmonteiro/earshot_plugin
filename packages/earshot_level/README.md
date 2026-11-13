@@ -20,9 +20,9 @@ import 'package:earshot_level/earshot_level.dart';
 final readings = const EarshotCapture().pcm().transform(
   const LevelMeter(
     options: LevelOptions(
-      weighting: Weighting.a,
-      response: Response.fast,
-      calibration: Calibration(offsetDb: 100),
+      weighting: FrequencyWeighting.a,
+      timeWeighting: TimeWeighting.fast,
+      calibration: LevelCalibration(offsetDb: 100),
     ),
   ),
 );
@@ -36,10 +36,10 @@ The meter emits one `LevelReading` per PCM chunk. Each listen starts a new measu
 
 ## What it measures
 
-- **Frequency weighting** (`Weighting.a`, `.c`, `.z`) per IEC 61672-1, within ±0.5 dB of the standard's design goals at ten frequencies from 31.5 Hz to 16 kHz, at 16, 44.1 and 48 kHz. At 16 kHz the Nyquist frequency is 8 kHz, so nothing above it can be measured, and the tested frequencies stop at 6.3 kHz.
-- **Time weighting** (`Response.fast`, `.slow`, `.impulse`): exponential averaging with 125 ms, 1 s, or 35 ms rise and 1.5 s decay. The meter starts from silence, so the first readings rise towards the true level.
+- **Frequency weighting** (`FrequencyWeighting.a`, `.c`, `.z`) per IEC 61672-1, within ±0.5 dB of the standard's design goals at ten frequencies from 31.5 Hz to 16 kHz, at 16, 44.1 and 48 kHz. At 16 kHz the Nyquist frequency is 8 kHz, so nothing above it can be measured, and the tested frequencies stop at 6.3 kHz.
+- **Time weighting** (`TimeWeighting.fast`, `.slow`, `.impulse`): exponential averaging with 125 ms, 1 s, or 35 ms rise and 1.5 s decay. The meter starts from silence, so the first readings rise towards the true level.
 - **Leq**: over the session (`leq`), the last second (`leq1s`) and the last 60 seconds (`leq60s`). The rolling windows have a 10 ms resolution, and cover the audio heard so far until they fill.
-- **Calibration**: `Calibration.offsetDb` is added to every level.
+- **LevelCalibration**: `LevelCalibration.offsetDb` is added to every level.
 
 ## Decibel reference
 
