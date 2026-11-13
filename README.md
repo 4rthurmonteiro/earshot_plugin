@@ -94,8 +94,8 @@ An item is ticked (`- [x]`) in the same pull request that implements it. The ver
 
 ### 1.0.0: stable
 
-- [ ] Stable public API
-- [ ] Performance measured on real devices (YAMNet under 50 ms per window on a mid-range Android device)
+- [x] Stable public API
+- [x] Performance measured on real devices (YAMNet under 50 ms per window on a mid-range Android device)
 
 ## Contributing
 
