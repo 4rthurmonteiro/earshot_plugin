@@ -34,9 +34,9 @@ To share one capture stream with other consumers, such as a level meter, classif
 
 ## Backends
 
-| `ClassifierBackend` | Engine | Platforms |
+| `ClassifierOptions.backend` | Engine | Platforms |
 | --- | --- | --- |
-| `auto` (default) | `apple` on iOS and macOS when it is available, `yamnet` otherwise | all |
+| `null` (default) | `apple` on iOS and macOS when it is available, `yamnet` otherwise | all |
 | `apple` | Apple SoundAnalysis, on PCM from `earshot_capture` | iOS 15+, macOS 12+ |
 | `yamnet` | YAMNet float32 with LiteRT, in a background isolate | Android, iOS, macOS |
 

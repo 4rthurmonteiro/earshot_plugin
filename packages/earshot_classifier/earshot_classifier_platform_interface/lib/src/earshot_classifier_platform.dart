@@ -13,8 +13,8 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 ///
 /// An implementation is a native backend, such as Apple SoundAnalysis on iOS
 /// and macOS, that classifies PCM captured by `earshot_capture`.
-/// `earshot_classifier` uses [instance] for [ClassifierBackend.apple], and
-/// for [ClassifierBackend.auto] on iOS and macOS when [isAvailable]
+/// `earshot_classifier` uses [instance] for [ClassifierBackend.apple], which
+/// it also picks on iOS and macOS when no backend is set and [isAvailable]
 /// completes with `true`. It runs [ClassifierBackend.yamnet] itself, in
 /// Dart.
 ///
@@ -48,8 +48,8 @@ abstract class EarshotClassifierPlatform extends PlatformInterface {
   /// OS is recent enough.
   ///
   /// Must never prompt the user, including for the microphone permission.
-  /// `earshot_classifier` falls back to [ClassifierBackend.yamnet] for
-  /// [ClassifierBackend.auto] when this completes with `false` or with an
+  /// When no backend is set, `earshot_classifier` falls back to
+  /// [ClassifierBackend.yamnet] if this completes with `false` or with an
   /// error.
   Future<bool> isAvailable() =>
       Future.error(UnimplementedError(kClassifierNotImplementedMessage));

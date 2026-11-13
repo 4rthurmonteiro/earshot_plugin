@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** `ClassifierBackend.auto` is removed. Leave `ClassifierOptions.backend` unset to let earshot pick the backend (ADR 0023).
 - Map a `ClassifierException` to the `EarshotErrorCode` of the same name (ADR 0024).
 - Document that `EarshotErrorCode` can gain values in a minor version, and show a `switch` with a wildcard case (ADR 0021).
 

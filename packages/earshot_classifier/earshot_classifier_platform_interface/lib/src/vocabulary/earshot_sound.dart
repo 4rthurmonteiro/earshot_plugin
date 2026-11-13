@@ -1542,21 +1542,11 @@ enum EarshotSound {
   final List<String> yamnetLabels;
 
   /// The labels of [backend] that map to this sound.
-  ///
-  /// Throws an [ArgumentError] for [ClassifierBackend.auto], which is not a
-  /// backend that produces labels.
   List<String> labelsOf(ClassifierBackend backend) => switch (backend) {
     ClassifierBackend.apple => appleLabels,
     ClassifierBackend.yamnet => yamnetLabels,
-    ClassifierBackend.auto => throw ArgumentError.value(
-      backend,
-      'backend',
-      'auto does not produce labels',
-    ),
   };
 
   /// Whether [backend] can recognize this sound.
-  ///
-  /// Throws an [ArgumentError] for [ClassifierBackend.auto].
   bool isSupportedBy(ClassifierBackend backend) => labelsOf(backend).isNotEmpty;
 }

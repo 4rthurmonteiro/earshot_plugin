@@ -35,7 +35,7 @@ class EarshotClassifier {
   ///   and runs Apple SoundAnalysis on it, on iOS and macOS. On other
   ///   platforms the stream errors with a [ClassifierException] with
   ///   [ClassifierErrorCode.unsupported].
-  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  /// - With no backend set, [ClassifierBackend.apple] is used on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
   /// Detections below [ClassifierOptions.minConfidence] are dropped, and the
@@ -60,7 +60,7 @@ class EarshotClassifier {
   /// - [ClassifierBackend.apple] runs Apple SoundAnalysis on [pcm], at any
   ///   rate, on iOS and macOS. On other platforms the stream errors with a
   ///   [ClassifierException] with [ClassifierErrorCode.unsupported].
-  /// - [ClassifierBackend.auto] uses [ClassifierBackend.apple] on iOS and
+  /// - With no backend set, [ClassifierBackend.apple] is used on iOS and
   ///   macOS when it is available, and [ClassifierBackend.yamnet] otherwise.
   ///
   /// Detections are filtered and smoothed as in [detections]. Errors from
@@ -92,21 +92,22 @@ class EarshotClassifier {
   /// and macOS.
   Future<EarshotClassifierPlatform?> _nativeBackend() async {
     final platform = EarshotClassifierPlatform.instance;
-    switch (options.backend) {
-      case ClassifierBackend.yamnet:
-        return null;
-      case ClassifierBackend.apple:
-        if (!_isApplePlatform) {
-          throw const ClassifierException(
-            ClassifierErrorCode.unsupported,
-            'The apple backend is only available on iOS and macOS.',
-          );
-        }
-        return platform;
-      case ClassifierBackend.auto:
-        if (_isApplePlatform && await _isAvailable(platform)) return platform;
-        return null;
+    // Comparisons rather than a switch: a switch over ClassifierBackend is
+    // not exhaustive against the 0.2.0 platform interface, which still has
+    // `auto`, and pana's downgrade check resolves that version.
+    final backend = options.backend;
+    if (backend == ClassifierBackend.yamnet) return null;
+    if (backend == ClassifierBackend.apple) {
+      if (!_isApplePlatform) {
+        throw const ClassifierException(
+          ClassifierErrorCode.unsupported,
+          'The apple backend is only available on iOS and macOS.',
+        );
+      }
+      return platform;
     }
+    if (_isApplePlatform && await _isAvailable(platform)) return platform;
+    return null;
   }
 
   static bool get _isApplePlatform =>

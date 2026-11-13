@@ -40,8 +40,7 @@ class SoundDetection {
   /// Scores from different backends cannot be compared.
   final double confidence;
 
-  /// The backend that produced this detection: [ClassifierBackend.apple] or
-  /// [ClassifierBackend.yamnet], never [ClassifierBackend.auto].
+  /// The backend that produced this detection.
   final ClassifierBackend backend;
 
   /// The time of the detection, relative to the start of capture.
