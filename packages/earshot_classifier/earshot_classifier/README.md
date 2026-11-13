@@ -89,6 +89,7 @@ flutter drive --profile -d <device> \
 | Device | OS | earshot | p50 | p95 | First window |
 | --- | --- | --- | --- | --- | --- |
 | MacBook (Apple M4) | macOS 26.5 | 0.2.0 | 1.1 ms | 1.2 ms | 10 ms |
+| Galaxy S20 FE (Snapdragon 865) | Android 13 | 0.2.0 | 12.1 ms | 16.6 ms | 69 ms |
 
 The target is a p95 under 50 ms on a mid-range Android device. The first window includes loading the model.
 
