@@ -51,9 +51,11 @@ Open a PR from that branch, titled `chore(release): publish packages`, and squas
 
 ```bash
 dart run melos run release:check    # validates every unpublished package with pub publish --dry-run
-dart run melos run release          # publishes without asking, tags and pushes the tags
+dart run melos run release          # publishes without asking, tags, pushes the tags and creates the GitHub release
 ```
 
 Melos publishes in dependency order, because each package resolves its siblings from pub.dev, and skips the versions that are already published.
 
-The first run needs `dart pub login`.
+The release ends by creating the GitHub release of the version, on the `earshot_plugin-v<version>` tag, with the changelog of every package published at that version. `dart run tool/github_release.dart --dry-run` prints its notes, and a release that already exists is skipped.
+
+The first run needs `dart pub login`, and the GitHub release needs the GitHub CLI (`gh auth login`).

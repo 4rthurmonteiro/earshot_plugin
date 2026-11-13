@@ -92,12 +92,12 @@ dart run melos run release:check    # pub publish --dry-run for every unpublishe
 Releases are cut by the maintainer in two steps (ADR 0020):
 
 1. **Version.** From a clean, up-to-date `main`, `release:version` creates a `release/<date>` branch and runs `melos version`. Melos bumps every package changed since its `<package>-v<version>` tag, according to the Conventional Commits, and raises the constraints of the packages that depend on it. A hook turns each `## Unreleased` changelog heading into the new version and updates the podspec versions and the example's `kEarshotVersion`. Open a PR from the branch, titled `chore(release): publish packages`, and squash-merge it.
-2. **Publish.** From `main` after the merge, Melos publishes in dependency order (each package resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`.
+2. **Publish.** From `main` after the merge, Melos publishes in dependency order (each package resolves its siblings from pub.dev), skips the versions that are already published, and tags each one `<package>-v<version>`. Then `tool/github_release.dart` creates the GitHub release on the `earshot_plugin-v<version>` tag, with each package's changelog (ADR 0027). It needs the GitHub CLI (`gh`), signed in.
 
 ```bash
 dart run melos run release:version  # bump versions and changelogs on a new release/<date> branch, and commit
 dart run melos run release:check    # pub publish --dry-run for every unpublished package
-dart run melos run release          # publish without asking, tag and push the tags; needs a clean, up-to-date main
+dart run melos run release          # publish without asking, tag, push the tags and create the GitHub release; needs a clean, up-to-date main and gh
 ```
 
 To force a version, such as a milestone of the feature checklist, run the version step with `dart run melos version --yes --manual-version <package>:<minor|patch|x.y.z>` on the release branch instead.
