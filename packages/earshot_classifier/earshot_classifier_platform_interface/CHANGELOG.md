@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 - First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - **Breaking:** remove `ClassifierBackend.auto`. `ClassifierBackend` now names engines only, and the vocabulary APIs no longer throw an `ArgumentError` for a backend (ADR 0023).

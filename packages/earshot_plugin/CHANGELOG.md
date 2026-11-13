@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 - First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - **Breaking:** the re-exported level types are renamed: `FrequencyWeighting`, `TimeWeighting` and `LevelCalibration`, and `LevelOptions.timeWeighting` (ADR 0025).

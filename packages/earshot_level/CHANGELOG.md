@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 - First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - **Breaking:** rename `Weighting` to `FrequencyWeighting`, `Response` to `TimeWeighting` and `Calibration` to `LevelCalibration`, and `LevelOptions.response` to `LevelOptions.timeWeighting`. `Response` clashed with `package:http` and `package:dio` (ADR 0025).
