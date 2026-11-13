@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- First stable release. The public API follows semantic versioning from now on: breaking changes only in a major version (ADR 0021).
 - **Breaking:** SoundAnalysis failures are delivered as a `ClassifierException` instead of a `CaptureException` with `CaptureErrorCode.unknown`: `unsupported` when SoundAnalysis cannot run on the OS or at the sample rate, and `modelUnavailable` when it fails while classifying (ADR 0024).
 
 ## 0.2.0
