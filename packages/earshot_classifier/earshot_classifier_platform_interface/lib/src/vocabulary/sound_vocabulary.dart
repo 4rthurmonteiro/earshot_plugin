@@ -26,9 +26,6 @@ final Map<String, EarshotSound> _yamnetSounds = {
 /// - A label the vocabulary does not know, for example from a newer
 ///   classifier version, falls back to [SoundGroup.other].
 /// - A few labels, such as silence, are never reported.
-///
-/// Every method throws an [ArgumentError] for [ClassifierBackend.auto], which
-/// is not a backend that produces labels.
 /// {@endtemplate}
 class SoundVocabulary {
   /// {@macro sound_vocabulary}
@@ -47,7 +44,6 @@ class SoundVocabulary {
       switch (backend) {
         ClassifierBackend.apple => _appleSounds[rawLabel],
         ClassifierBackend.yamnet => _yamnetSounds[rawLabel],
-        ClassifierBackend.auto => throw _autoError(backend),
       };
 
   /// The group of [rawLabel] of [backend], or `null` if the label is never
@@ -85,9 +81,5 @@ class SoundVocabulary {
       switch (backend) {
         ClassifierBackend.apple => appleLabelGroups,
         ClassifierBackend.yamnet => yamnetLabelGroups,
-        ClassifierBackend.auto => throw _autoError(backend),
       };
-
-  ArgumentError _autoError(ClassifierBackend backend) =>
-      ArgumentError.value(backend, 'backend', 'auto does not produce labels');
 }

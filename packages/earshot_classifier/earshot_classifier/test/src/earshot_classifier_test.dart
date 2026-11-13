@@ -88,7 +88,7 @@ void main() {
         verifyNever(() => platform.detections(any()));
       });
 
-      test('uses YAMNet for auto off Apple platforms', () async {
+      test('uses YAMNet with no backend off Apple platforms', () async {
         debugDefaultTargetPlatformOverride = TargetPlatform.android;
         final detections = <SoundDetection>[];
         const EarshotClassifier(
@@ -102,7 +102,7 @@ void main() {
 
       for (final target in [TargetPlatform.iOS, TargetPlatform.macOS]) {
         test(
-          'uses the platform for auto on ${target.name} when available',
+          'uses the platform with no backend on ${target.name} when available',
           () async {
             debugDefaultTargetPlatformOverride = target;
             when(platform.isAvailable).thenAnswer((_) async => true);
@@ -126,7 +126,7 @@ void main() {
       }
 
       test(
-        'falls back to YAMNet for auto when the platform is unavailable',
+        'falls back to YAMNet with no backend when the platform is unavailable',
         () async {
           debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
           when(platform.isAvailable).thenAnswer((_) async => false);
@@ -142,7 +142,7 @@ void main() {
       );
 
       test(
-        'falls back to YAMNet for auto when the platform cannot tell',
+        'falls back to YAMNet with no backend when the platform cannot tell',
         () async {
           debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
           when(platform.isAvailable)
@@ -329,32 +329,38 @@ void main() {
         );
       });
 
-      test('uses the platform for auto on macOS when available', () async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-        when(platform.isAvailable).thenAnswer((_) async => true);
-        when(() => platform.classify(any(), any()))
-            .thenAnswer((_) => Stream.value(_apple(0)));
+      test(
+        'uses the platform with no backend on macOS when available',
+        () async {
+          debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+          when(platform.isAvailable).thenAnswer((_) async => true);
+          when(() => platform.classify(any(), any()))
+              .thenAnswer((_) => Stream.value(_apple(0)));
 
-        await expectLater(
+          await expectLater(
+            const EarshotClassifier(
+              options: ClassifierOptions(smoothing: Smoothing(hits: 1)),
+            ).classify(pcm.stream),
+            emitsInOrder([_apple(0), emitsDone]),
+          );
+        },
+      );
+
+      test(
+        'uses YAMNet with no backend when the platform is unavailable',
+        () async {
+          debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+          when(platform.isAvailable).thenAnswer((_) async => false);
+          final detections = <SoundDetection>[];
           const EarshotClassifier(
             options: ClassifierOptions(smoothing: Smoothing(hits: 1)),
-          ).classify(pcm.stream),
-          emitsInOrder([_apple(0), emitsDone]),
-        );
-      });
+          ).classify(pcm.stream).listen(detections.add);
+          await feedWindows(1);
 
-      test('uses YAMNet for auto when the platform is unavailable', () async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-        when(platform.isAvailable).thenAnswer((_) async => false);
-        final detections = <SoundDetection>[];
-        const EarshotClassifier(
-          options: ClassifierOptions(smoothing: Smoothing(hits: 1)),
-        ).classify(pcm.stream).listen(detections.add);
-        await feedWindows(1);
-
-        expect(detections.single.backend, ClassifierBackend.yamnet);
-        verifyNever(() => platform.classify(any(), any()));
-      });
+          expect(detections.single.backend, ClassifierBackend.yamnet);
+          verifyNever(() => platform.classify(any(), any()));
+        },
+      );
     });
   });
 }

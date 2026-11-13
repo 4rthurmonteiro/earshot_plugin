@@ -111,17 +111,6 @@ void main() {
         isNull,
       );
     });
-
-    test('rejects the auto backend', () {
-      expect(
-        () => vocabulary.labels(ClassifierBackend.auto),
-        throwsArgumentError,
-      );
-      expect(
-        () => vocabulary.soundOf(ClassifierBackend.auto, 'Bark'),
-        throwsArgumentError,
-      );
-    });
   });
 
   group(EarshotSound, () {
@@ -148,13 +137,6 @@ void main() {
       expect(
         EarshotSound.noseBlowing.isSupportedBy(ClassifierBackend.yamnet),
         isFalse,
-      );
-    });
-
-    test('rejects the auto backend', () {
-      expect(
-        () => EarshotSound.dog.isSupportedBy(ClassifierBackend.auto),
-        throwsArgumentError,
       );
     });
 

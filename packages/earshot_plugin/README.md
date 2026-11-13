@@ -56,7 +56,7 @@ Set `level` or `classifier` to `null` to turn one off. With level metering off, 
 ## How it listens
 
 - **One microphone session.** One capture subscription feeds the level meter and the classifier, whatever its backend. Capture runs at `EarshotOptions.capture`, 16 kHz by default: the rate YAMNet runs at, so classification needs no resampling. The level meter works at every rate, but at 16 kHz it cannot measure above 8 kHz. Choose `SampleRate.hz48000` for a full-band level; YAMNet then resamples to 16 kHz.
-- **Backends.** The classifier reads the shared capture stream through `EarshotClassifier.classify`, which picks the backend. `apple`, and `auto` on iOS and macOS, run Apple SoundAnalysis at the capture rate. `yamnet`, and `auto` elsewhere, run YAMNet. Level readings and detections share the capture clock.
+- **Backends.** The classifier reads the shared capture stream through `EarshotClassifier.classify`, which picks the backend. `apple`, and a `null` backend on iOS and macOS, run Apple SoundAnalysis at the capture rate. `yamnet`, and a `null` backend elsewhere, run YAMNet. Level readings and detections share the capture clock.
 - **Subscriptions.** Each `listen()` starts its own session, and cancelling it stops everything it started. Pausing pauses capture and the classifier, and buffers audio in memory, so cancel rather than pause for long breaks.
 
 ## Errors
