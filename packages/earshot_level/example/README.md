@@ -5,7 +5,7 @@ import 'package:earshot_capture/earshot_capture.dart';
 import 'package:earshot_level/earshot_level.dart';
 
 final readings = const EarshotCapture().pcm().transform(
-  const LevelMeter(options: LevelOptions(weighting: Weighting.a)),
+  const LevelMeter(options: LevelOptions(weighting: FrequencyWeighting.a)),
 );
 ```
 

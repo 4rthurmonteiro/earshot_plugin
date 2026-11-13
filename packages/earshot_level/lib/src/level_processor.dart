@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:earshot_capture_platform_interface/earshot_capture_platform_interface.dart';
 import 'package:earshot_level/src/dsp/rolling_leq.dart';
-import 'package:earshot_level/src/dsp/time_weighting.dart';
+import 'package:earshot_level/src/dsp/time_weighting_filter.dart';
 import 'package:earshot_level/src/dsp/weighting_filter.dart';
 import 'package:earshot_level/src/level_options.dart';
 import 'package:earshot_level/src/level_reading.dart';
@@ -28,7 +28,7 @@ class LevelProcessor {
 
   int? _sampleRate;
   late WeightingFilter _filter;
-  late TimeWeighting _timeWeighting;
+  late TimeWeightingFilter _timeWeighting;
   double _meanSquare = 0;
   int _binSamples = 0;
 
@@ -102,7 +102,7 @@ class LevelProcessor {
   void _configure(int sampleRate) {
     _sampleRate = sampleRate;
     _filter = WeightingFilter(options.weighting, sampleRate);
-    _timeWeighting = TimeWeighting(options.response, sampleRate)
+    _timeWeighting = TimeWeightingFilter(options.timeWeighting, sampleRate)
       ..meanSquare = _meanSquare;
     _binSamples = (sampleRate * _binSeconds).round();
     _binSum = 0;

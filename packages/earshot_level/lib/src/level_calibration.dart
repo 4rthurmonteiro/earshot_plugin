@@ -1,14 +1,14 @@
 import 'package:meta/meta.dart';
 
-/// {@template calibration}
+/// {@template level_calibration}
 /// A calibration that corrects the readings of a specific device.
 ///
 /// Phone microphones are not measurement microphones. Without calibration,
 /// readings are estimates.
 /// {@endtemplate}
 @immutable
-class Calibration {
-  /// {@macro calibration}
+class LevelCalibration {
+  /// {@macro level_calibration}
   const new({this.offsetDb = 0});
 
   /// The offset, in decibels, added to every reading. Defaults to 0.
@@ -17,11 +17,11 @@ class Calibration {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Calibration && other.offsetDb == offsetDb;
+      other is LevelCalibration && other.offsetDb == offsetDb;
 
   @override
   int get hashCode => offsetDb.hashCode;
 
   @override
-  String toString() => 'Calibration(offsetDb: $offsetDb)';
+  String toString() => 'LevelCalibration(offsetDb: $offsetDb)';
 }

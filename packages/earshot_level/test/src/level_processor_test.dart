@@ -46,7 +46,7 @@ Float32List _tone(
 void main() {
   group(LevelProcessor, () {
     test('exposes its options', () {
-      const options = LevelOptions(weighting: Weighting.c);
+      const options = LevelOptions(weighting: FrequencyWeighting.c);
       expect(LevelProcessor(options).options, options);
     });
 
@@ -66,7 +66,7 @@ void main() {
 
     test('reports the weighting and the time after the last sample', () {
       final processor = LevelProcessor(
-        const LevelOptions(weighting: Weighting.z),
+        const LevelOptions(weighting: FrequencyWeighting.z),
       );
       final reading = processor.add(
         PcmChunk(
@@ -75,13 +75,13 @@ void main() {
           timestamp: const Duration(seconds: 2),
         ),
       )!;
-      expect(reading.weighting, Weighting.z);
+      expect(reading.weighting, FrequencyWeighting.z);
       expect(reading.timestamp, const Duration(seconds: 2, milliseconds: 10));
     });
 
     group('levels', () {
       for (final rate in SampleRate.values) {
-        for (final weighting in Weighting.values) {
+        for (final weighting in FrequencyWeighting.values) {
           test('read 0 dB for a full-scale 1 kHz sine at ${rate.hz} Hz '
               'with $weighting', () {
             final processor = LevelProcessor(
@@ -106,7 +106,7 @@ void main() {
 
       test('scale with the amplitude', () {
         final processor = LevelProcessor(
-          const LevelOptions(weighting: Weighting.z),
+          const LevelOptions(weighting: FrequencyWeighting.z),
         );
         final reading = _feed(
           processor,
@@ -116,7 +116,7 @@ void main() {
       });
 
       test('read the floor for digital silence', () {
-        for (final weighting in Weighting.values) {
+        for (final weighting in FrequencyWeighting.values) {
           final processor = LevelProcessor(LevelOptions(weighting: weighting));
           final reading = _feed(
             processor,
@@ -135,8 +135,8 @@ void main() {
         const offset = 94.0;
         final processor = LevelProcessor(
           const LevelOptions(
-            weighting: Weighting.z,
-            calibration: Calibration(offsetDb: offset),
+            weighting: FrequencyWeighting.z,
+            calibration: LevelCalibration(offsetDb: offset),
           ),
         );
         final loud = _feed(processor, _tone(SampleRate.hz48000, 1));
@@ -147,7 +147,7 @@ void main() {
 
         final quiet = _feed(
           LevelProcessor(
-            const LevelOptions(calibration: Calibration(offsetDb: offset)),
+            const LevelOptions(calibration: LevelCalibration(offsetDb: offset)),
           ),
           _silence(SampleRate.hz48000, 0.1),
         );
@@ -158,18 +158,18 @@ void main() {
     group('time weighting', () {
       // IEC 61672-1, Table 4: the response to a 4 kHz tone burst relative to
       // the steady response is 10·log10(1 - e^(-Tb/τ)).
-      const bursts = <(Response, int, double)>[
-        (Response.fast, 200, -1),
-        (Response.fast, 50, -4.8),
-        (Response.fast, 10, -11.1),
-        (Response.slow, 500, -4.1),
-        (Response.slow, 200, -7.4),
+      const bursts = <(TimeWeighting, int, double)>[
+        (TimeWeighting.fast, 200, -1),
+        (TimeWeighting.fast, 50, -4.8),
+        (TimeWeighting.fast, 10, -11.1),
+        (TimeWeighting.slow, 500, -4.1),
+        (TimeWeighting.slow, 200, -7.4),
       ];
       for (final (response, millis, expected) in bursts) {
         test('$response reads $expected dB for a $millis ms tone burst', () {
           const rate = SampleRate.hz48000;
           double read(double seconds) => _feed(
-            LevelProcessor(LevelOptions(response: response)),
+            LevelProcessor(LevelOptions(timeWeighting: response)),
             _tone(rate, seconds, hz: 4000),
             chunkSize: 48,
           ).db;
@@ -180,7 +180,7 @@ void main() {
 
       test('fast falls about 34.7 dB in the second after a tone stops', () {
         final processor = LevelProcessor(
-          const LevelOptions(weighting: Weighting.z),
+          const LevelOptions(weighting: FrequencyWeighting.z),
         );
         final before = _feed(processor, _tone(SampleRate.hz48000, 2));
         final after = _feed(processor, _silence(SampleRate.hz48000, 0.25));
@@ -189,17 +189,20 @@ void main() {
       });
 
       test('impulse holds a short burst longer than fast', () {
-        double afterBurst(Response response) {
+        double afterBurst(TimeWeighting response) {
           final processor = LevelProcessor(
-            LevelOptions(weighting: Weighting.z, response: response),
+            LevelOptions(
+              weighting: FrequencyWeighting.z,
+              timeWeighting: response,
+            ),
           );
           _feed(processor, _tone(SampleRate.hz48000, 0.1));
           return _feed(processor, _silence(SampleRate.hz48000, 0.5)).db;
         }
 
         expect(
-          afterBurst(Response.impulse),
-          greaterThan(afterBurst(Response.fast) + 10),
+          afterBurst(TimeWeighting.impulse),
+          greaterThan(afterBurst(TimeWeighting.fast) + 10),
         );
       });
     });
@@ -207,7 +210,7 @@ void main() {
     group('Leq', () {
       test('session Leq averages the energy of the whole session', () {
         final processor = LevelProcessor(
-          const LevelOptions(weighting: Weighting.z),
+          const LevelOptions(weighting: FrequencyWeighting.z),
         );
         _feed(processor, _tone(SampleRate.hz48000, 1));
         final reading = _feed(processor, _silence(SampleRate.hz48000, 1));
@@ -218,7 +221,7 @@ void main() {
 
       test('1 s Leq covers exactly the last second across partial bins', () {
         final processor = LevelProcessor(
-          const LevelOptions(weighting: Weighting.z),
+          const LevelOptions(weighting: FrequencyWeighting.z),
         );
         _feed(processor, _tone(SampleRate.hz48000, 1));
         // 0.5 s and 250 samples of silence: the reading lands mid-bin.
@@ -230,7 +233,7 @@ void main() {
       test('60 s Leq rolls over the last minute', () {
         const rate = SampleRate.hz16000;
         final processor = LevelProcessor(
-          const LevelOptions(weighting: Weighting.z),
+          const LevelOptions(weighting: FrequencyWeighting.z),
         );
         _feed(processor, _tone(rate, 60), sampleRate: rate, chunkSize: 1600);
         final reading = _feed(

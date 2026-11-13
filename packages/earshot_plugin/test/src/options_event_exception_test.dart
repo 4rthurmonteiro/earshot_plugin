@@ -56,7 +56,7 @@ void main() {
       leq: 55,
       leq1s: 58,
       leq60s: 57,
-      weighting: Weighting.a,
+      weighting: FrequencyWeighting.a,
       timestamp: Duration(seconds: 1),
     );
     const detection = SoundDetection(

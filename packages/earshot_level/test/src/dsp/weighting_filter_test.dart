@@ -37,7 +37,7 @@ const _bands = <SampleRate, List<int>>{
 const _tolerance = 0.5;
 
 /// The analog IEC 61672-1 weighting, in decibels, normalized at 1 kHz.
-double _analogDb(Weighting weighting, double hz) {
+double _analogDb(FrequencyWeighting weighting, double hz) {
   const f1 = 20.598997;
   const f2 = 107.65265;
   const f3 = 737.86223;
@@ -47,10 +47,10 @@ double _analogDb(Weighting weighting, double hz) {
     final low = ff / (ff + f1 * f1);
     final high = f4 * f4 / (ff + f4 * f4);
     return switch (weighting) {
-      Weighting.a =>
+      FrequencyWeighting.a =>
         low * high * ff / math.sqrt((ff + f2 * f2) * (ff + f3 * f3)),
-      Weighting.c => low * high,
-      Weighting.z => 1,
+      FrequencyWeighting.c => low * high,
+      FrequencyWeighting.z => 1,
     };
   }
 
@@ -79,14 +79,14 @@ void main() {
   group(WeightingFilter, () {
     for (final rate in SampleRate.values) {
       group('at ${rate.hz} Hz', () {
-        for (final weighting in Weighting.values) {
+        for (final weighting in FrequencyWeighting.values) {
           group('$weighting', () {
             for (final n in _bands[rate]!) {
               final band = _iec[n]!;
               final expected = switch (weighting) {
-                Weighting.a => band.a,
-                Weighting.c => band.c,
-                Weighting.z => 0.0,
+                FrequencyWeighting.a => band.a,
+                FrequencyWeighting.c => band.c,
+                FrequencyWeighting.z => 0.0,
               };
               test('is within ±$_tolerance dB of IEC 61672-1 at '
                   '${band.nominal} ($expected dB)', () {
@@ -122,13 +122,13 @@ void main() {
     }
 
     test('exposes its weighting and sample rate', () {
-      final filter = WeightingFilter(Weighting.c, 44100);
-      expect(filter.weighting, Weighting.c);
+      final filter = WeightingFilter(FrequencyWeighting.c, 44100);
+      expect(filter.weighting, FrequencyWeighting.c);
       expect(filter.sampleRate, 44100);
     });
 
     test('reads exactly 0 dB at 1 kHz', () {
-      for (final weighting in Weighting.values) {
+      for (final weighting in FrequencyWeighting.values) {
         expect(
           WeightingFilter(weighting, 48000).magnitudeAt(1000),
           closeTo(1, 1e-12),
@@ -137,13 +137,13 @@ void main() {
     });
 
     test('passes the signal through unchanged with Z weighting', () {
-      final filter = WeightingFilter(Weighting.z, 16000);
+      final filter = WeightingFilter(FrequencyWeighting.z, 16000);
       expect(filter.process(0.25), 0.25);
       expect(filter.process(-1), -1);
     });
 
     test('reset clears the state', () {
-      for (final weighting in Weighting.values) {
+      for (final weighting in FrequencyWeighting.values) {
         final filter = WeightingFilter(weighting, 48000);
         final first = [
           for (var i = 0; i < 32; i++) filter.process(i == 0 ? 1 : 0),

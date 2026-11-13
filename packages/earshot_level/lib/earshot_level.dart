@@ -7,9 +7,9 @@ library;
 import 'package:earshot_level/src/level_meter.dart';
 import 'package:earshot_level/src/level_reading.dart';
 
-export 'src/calibration.dart';
+export 'src/frequency_weighting.dart';
+export 'src/level_calibration.dart';
 export 'src/level_meter.dart';
 export 'src/level_options.dart';
 export 'src/level_reading.dart';
-export 'src/response.dart';
-export 'src/weighting.dart';
+export 'src/time_weighting.dart';

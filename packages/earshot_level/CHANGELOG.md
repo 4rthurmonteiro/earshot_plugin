@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** rename `Weighting` to `FrequencyWeighting`, `Response` to `TimeWeighting` and `Calibration` to `LevelCalibration`, and `LevelOptions.response` to `LevelOptions.timeWeighting`. `Response` clashed with `package:http` and `package:dio` (ADR 0025).
+
 ## 0.1.0
 
 - `LevelMeter` now measures: it emits one `LevelReading` per non-empty `PcmChunk` at 16, 44.1 and 48 kHz.

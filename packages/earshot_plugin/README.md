@@ -29,7 +29,7 @@ await const MicrophonePermission().request();
 final subscription = const Earshot()
     .listen(
       options: const EarshotOptions(
-        level: LevelOptions(weighting: Weighting.a),
+        level: LevelOptions(weighting: FrequencyWeighting.a),
         classifier: ClassifierOptions(minConfidence: 0.5),
       ),
     )

@@ -1,21 +1,21 @@
 import 'dart:math' as math;
 
-import 'package:earshot_level/src/response.dart';
+import 'package:earshot_level/src/time_weighting.dart';
 
-/// {@template time_weighting}
+/// {@template time_weighting_filter}
 /// An exponential time weighting of the squared signal, as defined by
 /// IEC 61672-1.
 ///
 /// Internal to `earshot_level`. The output is a running mean square that
-/// rises with [Response.timeConstant] and decays with
-/// [Response.decayTimeConstant]. It starts at 0, as if the meter had only
+/// rises with [TimeWeighting.timeConstant] and decays with
+/// [TimeWeighting.decayTimeConstant]. It starts at 0, as if the meter had only
 /// heard silence.
 /// {@endtemplate}
-class TimeWeighting {
-  /// {@macro time_weighting}
-  new(Response response, int sampleRate)
-    : _rise = _coefficient(response.timeConstant, sampleRate),
-      _decay = _coefficient(response.decayTimeConstant, sampleRate);
+class TimeWeightingFilter {
+  /// {@macro time_weighting_filter}
+  new(TimeWeighting timeWeighting, int sampleRate)
+    : _rise = _coefficient(timeWeighting.timeConstant, sampleRate),
+      _decay = _coefficient(timeWeighting.decayTimeConstant, sampleRate);
 
   static double _coefficient(Duration timeConstant, int sampleRate) {
     final seconds =

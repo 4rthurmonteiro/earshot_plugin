@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:earshot_level/src/dsp/biquad.dart';
 import 'package:earshot_level/src/dsp/linear_phase_fir.dart';
-import 'package:earshot_level/src/weighting.dart';
+import 'package:earshot_level/src/frequency_weighting.dart';
 
 /// The pole frequencies of the IEC 61672-1 weighting functions, in hertz.
 const _f1 = 20.598997;
@@ -25,19 +25,21 @@ const _f4 = 12194.217;
 ///   modelled by a linear-phase FIR fitted to the analog magnitude up to the
 ///   Nyquist frequency.
 ///
-/// The gain is normalized to 0 dB at 1 kHz. [Weighting.z] passes the signal
-/// through unchanged.
+/// The gain is normalized to 0 dB at 1 kHz. [FrequencyWeighting.z] passes the
+/// signal through unchanged.
 /// {@endtemplate}
 class WeightingFilter {
   /// {@macro weighting_filter}
   new(this.weighting, this.sampleRate)
     : _sections = _sectionsFor(weighting, sampleRate),
-      _highPoles = weighting == Weighting.z ? null : _highPolesFor(sampleRate) {
+      _highPoles = weighting == FrequencyWeighting.z
+          ? null
+          : _highPolesFor(sampleRate) {
     _gain = 1 / _rawMagnitudeAt(1000);
   }
 
   /// The frequency weighting this filter applies.
-  final Weighting weighting;
+  final FrequencyWeighting weighting;
 
   /// The sample rate this filter is designed for, in hertz.
   final int sampleRate;
@@ -46,17 +48,19 @@ class WeightingFilter {
   final LinearPhaseFir? _highPoles;
   late final double _gain;
 
-  static List<Biquad> _sectionsFor(Weighting weighting, int sampleRate) =>
-      switch (weighting) {
-        Weighting.a => [
-          Biquad.highPass(pole1Hz: _f1, pole2Hz: _f1, sampleRate: sampleRate),
-          Biquad.highPass(pole1Hz: _f2, pole2Hz: _f3, sampleRate: sampleRate),
-        ],
-        Weighting.c => [
-          Biquad.highPass(pole1Hz: _f1, pole2Hz: _f1, sampleRate: sampleRate),
-        ],
-        Weighting.z => const [],
-      };
+  static List<Biquad> _sectionsFor(
+    FrequencyWeighting weighting,
+    int sampleRate,
+  ) => switch (weighting) {
+    FrequencyWeighting.a => [
+      Biquad.highPass(pole1Hz: _f1, pole2Hz: _f1, sampleRate: sampleRate),
+      Biquad.highPass(pole1Hz: _f2, pole2Hz: _f3, sampleRate: sampleRate),
+    ],
+    FrequencyWeighting.c => [
+      Biquad.highPass(pole1Hz: _f1, pole2Hz: _f1, sampleRate: sampleRate),
+    ],
+    FrequencyWeighting.z => const [],
+  };
 
   static LinearPhaseFir _highPolesFor(int sampleRate) => LinearPhaseFir.fit(
     // |ω4² / (s + ω4)²| = 1 / (1 + (f / f4)²).
